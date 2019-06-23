@@ -5,6 +5,8 @@
   "bin": "./index.js",
   "main": "index.js",
   "scripts": {
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,7 +34,8 @@
     "@types/deep-extend": "^0.4.31",
     "@types/json-pointer": "^1.0.30",
     "@types/request-promise": "^4.1.42",
-    "@types/yargs": "^12.0.8"
+    "@types/yargs": "^12.0.8",
+    "typescript": "^3.3.1"
   },
   "dependencies": {
     "deep-extend": "^0.6.0",
