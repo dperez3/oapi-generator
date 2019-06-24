@@ -2,8 +2,7 @@
 
 import path from 'path';
 import yargs from 'yargs';
-import { createDocAsync } from './index';
-import { Configuration } from "./configuration";
+import { createDocAsync, Configuration } from './index';
 
 const argDefs = yargs
   .usage(`Usage: 'npm run gen-openapi-doc -- --config "./gen-openapi-config/configurations.js"'`)
