@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { OpenAPIV3 } from "openapi-types";
 
 export namespace Configuration {
