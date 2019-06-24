@@ -263,8 +263,6 @@ export async function createDocAsync(config: Configuration.IGenOpenAPIV3Config):
   return config.output.destination;
 }
 
-export { Configuration }
-
 interface IImport {
   paths: OpenAPIV3.PathObject,
   components: OpenAPIV3.ComponentsObject;
