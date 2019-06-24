@@ -2,7 +2,7 @@
   "name": "oapi-generator",
   "version": "1.0.0",
   "description": "Generate OpenAPI documents from multiple Swagger v2 or Open API v3 documents.",
-  "bin": "./index.js",
+  "bin": "./run.js",
   "main": "index.js",
   "scripts": {
     "build-ts": "tsc",
