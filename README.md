@@ -14,6 +14,7 @@ npm install --save-dev openapi-types@1.3.4
 
 ### Configure
 
+#### Config File
 Javascript
 ```js
 const v1GenDoc = { /*...*/ };
@@ -45,7 +46,7 @@ export = config;
 
 `openapi-types` combined with TypesScript intellisense provides the easiest way to understand the configuration API.
 
-`package.json`
+#### `package.json`
 ```json
 {
   "scripts": {
