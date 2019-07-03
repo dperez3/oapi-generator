@@ -16,9 +16,9 @@ npm install --save-dev openapi-types@1.3.4
 
 Javascript
 ```js
-const v1GenDoc = { /*.../* };
+const v1GenDoc = { /*...*/ };
 
-const v2GenDoc = { /*.../* };
+const v2GenDoc = { /*...*/ };
 
 const config =
 {
@@ -32,9 +32,9 @@ Or TypeScript
 import { Configuration } from "oapi-generator/configuration";
 import { OpenAPIV3 } from "openapi-types";
 
-const v1GenDoc: Configuration.IGenOpenAPIV3Config = { /*.../* };
+const v1GenDoc: Configuration.IGenOpenAPIV3Config = { /*...*/ };
 
-const v2GenDoc: Configuration.IGenOpenAPIV3Config = { /*.../* };
+const v2GenDoc: Configuration.IGenOpenAPIV3Config = { /*...*/ };
 
 const config: Configuration.IManyGenOpenAPIV3Configs =
 {
