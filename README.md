@@ -27,7 +27,6 @@ const config =
 ```
 
 Or TypeScript
-
 ```ts
 import { Configuration } from "oapi-generator/configuration";
 import { OpenAPIV3 } from "openapi-types";
@@ -45,3 +44,12 @@ export = config;
 ```
 
 `openapi-types` combined with TypesScript intellisense provides the easiest way to understand the configuration API.
+
+`package.json`
+```json
+{
+  "scripts": {
+    "oapi-gen:run": "oapi-generator --config {path_to_above_config_file}"
+  }
+}
+```
