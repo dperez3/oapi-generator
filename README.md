@@ -1,4 +1,7 @@
 # oapi-generator
+
+[![buddy pipeline](https://app.buddy.works/dperez3iii/oapi-generator/pipelines/pipeline/194390/badge.svg?token=3c7d484bbe0003aba1918844243f2752a904e06cb52dc12bbedee9ceeae78646 "buddy pipeline")](https://app.buddy.works/dperez3iii/oapi-generator/pipelines/pipeline/194390)
+
 Generate OpenAPI documents from multiple Swagger v2 or Open API v3 documents.
 
 [npm](https://www.npmjs.com/package/oapi-generator)
