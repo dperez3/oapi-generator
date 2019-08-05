@@ -20,6 +20,18 @@
             "type": "npm",
             "script": "cm",
             "problemMatcher": []
+        },
+        {
+            "label": "Test",
+            "type": "npm",
+            "script": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Watch test",
+            "type": "npm",
+            "script": "watch-test",
+            "problemMatcher": []
         }
     ]
 }
