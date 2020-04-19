@@ -2,7 +2,7 @@
 
 import fs from "fs";
 import path from "path";
-import request from "request-promise";
+import importJson from "./importer";
 import converter from "swagger2openapi";
 import { OpenAPIV3, OpenAPIV2 } from "openapi-types";
 import deepExtend from "deep-extend";
@@ -11,14 +11,6 @@ import { Configuration } from "./configuration";
 
 const V2_REGEX = /2.*/;
 const V3_REGEX = /3.*/;
-
-async function getURLJsonAsync(url: string): Promise<any> {
-  return request.get(url).then(JSON.parse);
-}
-
-function getJsonByFilePath(filePath: string): any {
-  return JSON.parse(fs.readFileSync(filePath, { encoding: "utf8" }));
-}
 
 async function asOpenAPIV3Async(
   doc: OpenAPIV2.Document | OpenAPIV3.Document
@@ -230,7 +222,7 @@ async function getObjectToImportAsync(
   docConfiguration: Configuration.IDocConfig
 ): Promise<IImport> {
   console.log(`Fetching json for ${docUrl} ...`);
-  let originalDocJson = (await getURLJsonAsync(docUrl)) as (
+  let originalDocJson = (await importJson(docUrl)) as (
     | OpenAPIV2.Document
     | OpenAPIV3.Document);
 
@@ -276,9 +268,9 @@ export async function createDocAsync(
       config.output.template
     } ...`
   );
-  let templateJson = getJsonByFilePath(
+  let templateJson = (await importJson(
       config.output.template
-    ) as OpenAPIV3.Document,
+    )) as OpenAPIV3.Document,
     combinedObjectToImport = documentObjectsToImport.reduce(
       deepExtend,
       {}

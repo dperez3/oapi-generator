@@ -15,20 +15,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const request_promise_1 = __importDefault(require("request-promise"));
+const importer_1 = __importDefault(require("./importer"));
 const swagger2openapi_1 = __importDefault(require("swagger2openapi"));
 const deep_extend_1 = __importDefault(require("deep-extend"));
 const json_pointer_1 = __importDefault(require("json-pointer"));
 const V2_REGEX = /2.*/;
 const V3_REGEX = /3.*/;
-function getURLJsonAsync(url) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return request_promise_1.default.get(url).then(JSON.parse);
-    });
-}
-function getJsonByFilePath(filePath) {
-    return JSON.parse(fs_1.default.readFileSync(filePath, { encoding: "utf8" }));
-}
 function asOpenAPIV3Async(doc) {
     return __awaiter(this, void 0, void 0, function* () {
         let v2Doc = doc, v3Doc = doc, isV2Doc = v2Doc.swagger && V2_REGEX.test(v2Doc.swagger), isV3Doc = v3Doc.openapi && V3_REGEX.test(v3Doc.openapi);
@@ -185,7 +177,7 @@ function updateComponentPaths(importableDoc, componentPathPrefix) {
 function getObjectToImportAsync(docUrl, docConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(`Fetching json for ${docUrl} ...`);
-        let originalDocJson = (yield getURLJsonAsync(docUrl));
+        let originalDocJson = (yield importer_1.default(docUrl));
         console.log(`Checking and/or converting doc at ${docUrl} to OpenAPI V3...`);
         let openapiv3Doc = yield asOpenAPIV3Async(originalDocJson);
         console.log(`Creating paths to import from ${docUrl} ...`);
@@ -205,7 +197,7 @@ function createDocAsync(config) {
     return __awaiter(this, void 0, void 0, function* () {
         let documentObjectsToImport = yield Promise.all(Object.keys(config.docs).map(x => getObjectToImportAsync(x, config.docs[x])));
         console.log(`Combining ${documentObjectsToImport.length} doc(s) with template at ${config.output.template} ...`);
-        let templateJson = getJsonByFilePath(config.output.template), combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
+        let templateJson = (yield importer_1.default(config.output.template)), combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
         let completeSwaggerDoc = deep_extend_1.default(templateJson, combinedObjectToImport);
         console.log(`Writing generated doc at ${config.output.destination} ...`);
         writeJsonToFile(completeSwaggerDoc, config.output.destination);
