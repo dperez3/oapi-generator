@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -17,11 +18,11 @@ const yargs_1 = __importDefault(require("yargs"));
 const index_1 = require("./index");
 const argDefs = yargs_1.default
     .usage(`Usage: 'npm run gen-openapi-doc -- --config "./gen-openapi-config/configurations.js"'`)
-    .option('config', {
-    alias: 'c',
+    .option("config", {
+    alias: "c",
     demandOption: true,
     describe: `The configuration file to generate the new OpenAPI v3 document(s) with.`,
-    type: 'string',
+    type: "string",
     normalize: true,
     coerce: path_1.default.resolve
 });
@@ -31,8 +32,7 @@ function getConfigurationFromFile(filePath) {
 }
 function generateOneDocAsync(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        index_1.createDocAsync(config)
-            .catch(err => {
+        index_1.createDocAsync(config).catch(err => {
             console.error(err);
             throw Error(err);
         });
@@ -48,7 +48,8 @@ let generationConfiguration = getConfigurationFromFile(argv.config);
 if (generationConfiguration.genConfigs) {
     generateManyDocsAsync(generationConfiguration);
 }
-else { // otherwise, treat as configuration for generating 1 file...
+else {
+    // otherwise, treat as configuration for generating 1 file...
     generateOneDocAsync(generationConfiguration);
 }
 //# sourceMappingURL=run.js.map

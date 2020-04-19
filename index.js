@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -22,13 +23,11 @@ const V2_REGEX = /2.*/;
 const V3_REGEX = /3.*/;
 function getURLJsonAsync(url) {
     return __awaiter(this, void 0, void 0, function* () {
-        return request_promise_1.default
-            .get(url)
-            .then(JSON.parse);
+        return request_promise_1.default.get(url).then(JSON.parse);
     });
 }
 function getJsonByFilePath(filePath) {
-    return JSON.parse(fs_1.default.readFileSync(filePath, { encoding: 'utf8' }));
+    return JSON.parse(fs_1.default.readFileSync(filePath, { encoding: "utf8" }));
 }
 function asOpenAPIV3Async(doc) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -41,7 +40,7 @@ function asOpenAPIV3Async(doc) {
             return v3Doc;
         }
         else {
-            throw Error('Document not recognized as Swagger 2.x nor OpenAPI 3.x.');
+            throw Error("Document not recognized as Swagger 2.x nor OpenAPI 3.x.");
         }
     });
 }
@@ -103,14 +102,13 @@ function getAllReferencingObjectsInObject(objectToSearch) {
     // deep object search for properties named '$ref'
     let results = [];
     if (objectToSearch instanceof Array) {
-        let referencedComponents = objectToSearch
-            .map(getAllReferencingObjectsInObject);
+        let referencedComponents = objectToSearch.map(getAllReferencingObjectsInObject);
         results = results.concat(...referencedComponents);
     }
     else {
         for (let prop in objectToSearch) {
             let propValue = objectToSearch[prop];
-            if (prop == '$ref') {
+            if (prop == "$ref") {
                 results.push(objectToSearch);
             }
             else if (propValue instanceof Object || propValue instanceof Array) {
@@ -131,8 +129,7 @@ function getAllReferencedComponentsInObject(rootObject, objectToSearch) {
             distinctReferencingObjects.push(obj.$ref);
         }
     }
-    return distinctReferencingObjects
-        .map(x => {
+    return distinctReferencingObjects.map(x => {
         let strictPath = x.substr(1);
         return {
             path: strictPath,
@@ -144,8 +141,7 @@ function getComponentsToImport(doc, paths) {
     let groupsOfReferencedComponents = paths
         .map(x => doc.paths[x])
         .map(x => getAllReferencedComponentsInObject(doc, x));
-    let referencedComponents = []
-        .concat(...groupsOfReferencedComponents);
+    let referencedComponents = [].concat(...groupsOfReferencedComponents);
     // We must go deeper... Recursive search through results (Find components referenced by referenced components)
     let recursiveResults = referencedComponents;
     do {
@@ -159,8 +155,7 @@ function getComponentsToImport(doc, paths) {
         referencedComponents = referencedComponents.concat(...recursiveResults);
     } while (recursiveResults.length > 0);
     let newDoc = {};
-    referencedComponents
-        .forEach(x => {
+    referencedComponents.forEach(x => {
         json_pointer_1.default.set(newDoc, x.path, x.obj);
     });
     return newDoc.components;
@@ -174,8 +169,7 @@ function updateComponentPaths(importableDoc, componentPathPrefix) {
     if (!componentPathPrefix)
         return;
     let allReferencingObjects = getAllReferencingObjectsInObject(importableDoc);
-    allReferencingObjects
-        .forEach(referencingObject => {
+    allReferencingObjects.forEach(referencingObject => {
         let originalPath = referencingObject.$ref, originalPathValid = originalPath.substr(1), newPath = createNewPath(referencingObject.$ref, componentPathPrefix), newPathValid = newPath.substr(1);
         console.log(`Converting component path reference from '${originalPath}' to '${newPath}' ...`);
         // set path to newpath
@@ -191,7 +185,7 @@ function updateComponentPaths(importableDoc, componentPathPrefix) {
 function getObjectToImportAsync(docUrl, docConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(`Fetching json for ${docUrl} ...`);
-        let originalDocJson = yield getURLJsonAsync(docUrl);
+        let originalDocJson = (yield getURLJsonAsync(docUrl));
         console.log(`Checking and/or converting doc at ${docUrl} to OpenAPI V3...`);
         let openapiv3Doc = yield asOpenAPIV3Async(originalDocJson);
         console.log(`Creating paths to import from ${docUrl} ...`);
@@ -209,9 +203,7 @@ function getObjectToImportAsync(docUrl, docConfiguration) {
 }
 function createDocAsync(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        let documentObjectsToImport = yield Promise.all(Object
-            .keys(config.docs)
-            .map(x => getObjectToImportAsync(x, config.docs[x])));
+        let documentObjectsToImport = yield Promise.all(Object.keys(config.docs).map(x => getObjectToImportAsync(x, config.docs[x])));
         console.log(`Combining ${documentObjectsToImport.length} doc(s) with template at ${config.output.template} ...`);
         let templateJson = getJsonByFilePath(config.output.template), combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
         let completeSwaggerDoc = deep_extend_1.default(templateJson, combinedObjectToImport);
