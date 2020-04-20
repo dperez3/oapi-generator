@@ -1,6 +1,6 @@
 {
   "name": "oapi-generator",
-  "version": "1.0.1",
+  "version": "1.0.2-fix-dependencies.0",
   "description": "Generate OpenAPI documents from multiple Swagger v2 or Open API v3 documents.",
   "bin": "./run.js",
   "main": "index.js",
