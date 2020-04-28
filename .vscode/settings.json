@@ -1,6 +1,6 @@
 {
-    "files.exclude": {
-        "**/*.js": true,
-        "**/*.js.map": true
-    }
+  "files.exclude": {
+    "**/*.js": false,
+    "**/*.js.map": true
+  }
 }

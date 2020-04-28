@@ -32,7 +32,7 @@ function getConfigurationFromFile(filePath) {
 }
 function generateOneDocAsync(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        index_1.createDocAsync(config).catch(err => {
+        index_1.generateDocAsync(config).catch(err => {
             console.error(err);
             throw Error(err);
         });

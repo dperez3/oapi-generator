@@ -15,12 +15,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const importer_1 = __importDefault(require("./importer"));
+const oApiDocumentService_1 = require("./oApiDocumentService");
 const swagger2openapi_1 = __importDefault(require("swagger2openapi"));
 const deep_extend_1 = __importDefault(require("deep-extend"));
 const json_pointer_1 = __importDefault(require("json-pointer"));
+const console_ui_1 = __importDefault(require("console-ui"));
 const V2_REGEX = /2.*/;
 const V3_REGEX = /3.*/;
+const FailIfInvalidImports = false;
+const ui = new console_ui_1.default({
+    inputStream: process.stdin,
+    outputStream: process.stdout,
+    errorStream: process.stderr,
+    writeLevel: "WARNING" //'DEBUG' | 'INFO' | 'WARNING' | 'ERROR',
+});
 function asOpenAPIV3Async(doc) {
     return __awaiter(this, void 0, void 0, function* () {
         let v2Doc = doc, v3Doc = doc, isV2Doc = v2Doc.swagger && V2_REGEX.test(v2Doc.swagger), isV3Doc = v3Doc.openapi && V3_REGEX.test(v3Doc.openapi);
@@ -174,10 +182,10 @@ function updateComponentPaths(importableDoc, componentPathPrefix) {
         }
     });
 }
-function getObjectToImportAsync(docUrl, docConfiguration) {
+function transformToImportable(sourceOApiDocument, docConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(`Fetching json for ${docUrl} ...`);
-        let originalDocJson = (yield importer_1.default(docUrl));
+        let originalDocJson = (yield importJson(docUrl));
         console.log(`Checking and/or converting doc at ${docUrl} to OpenAPI V3...`);
         let openapiv3Doc = yield asOpenAPIV3Async(originalDocJson);
         console.log(`Creating paths to import from ${docUrl} ...`);
@@ -193,11 +201,56 @@ function getObjectToImportAsync(docUrl, docConfiguration) {
         return importedDoc;
     });
 }
-function createDocAsync(config) {
+function getSourceOApiDocuments(paths) {
     return __awaiter(this, void 0, void 0, function* () {
-        let documentObjectsToImport = yield Promise.all(Object.keys(config.docs).map(x => getObjectToImportAsync(x, config.docs[x])));
+        return yield Promise.all(paths.map((path) => __awaiter(this, void 0, void 0, function* () {
+            return {
+                sourcePath: path,
+                oApiDocument: yield oApiDocumentService_1.getOApiDocument(path)
+            };
+        })));
+    });
+}
+function validateOApiDocuments(oApiSourceDocuments) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let validatedDocuments = yield Promise.all(oApiSourceDocuments.map((x) => __awaiter(this, void 0, void 0, function* () {
+            return Object.assign(Object.assign({}, x), { isValid: yield oApiDocumentService_1.isValidOApiDocument(x.oApiDocument) });
+        })));
+        let invalidDocuments = validatedDocuments.filter(x => x.isValid === false);
+        if (invalidDocuments.length > 0) {
+            let invalidSources = invalidDocuments
+                .map(x => `"${x.sourcePath}"`)
+                .join(", ");
+            let message = `Imported documents did not have valid schemas => ${invalidSources}`;
+            ui.writeWarnLine(message);
+            if (FailIfInvalidImports) {
+                throw new Error(message);
+            }
+        }
+    });
+}
+function generateDocAsync(config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Step 1: Import all dependent documents. Fail immediately if one is not found.
+        let oapiDocumentsToImport = yield getSourceOApiDocuments(Object.keys(config.docs));
+        // Step 2: Validate imported OpenAPI document schemas. Log or fail when invalid schema is found. (new config value?).
+        yield validateOApiDocuments(oapiDocumentsToImport);
+        // Step 3: Setup plan. Report plan.
+        //    - V2 to V3 conversions
+        // Step 4: Execute plan. Iterate through each document 1 by 1. Report all things...
+        //    - V2 to V3 conversions
+        //    - Types being imported
+        let importationContexts = oapiDocumentsToImport.map(x => {
+            return {
+                config: config.docs[x.sourcePath],
+                oApiDocument: x.oApiDocument
+            };
+        });
+        let finalImportables = yield Promise.all(oapiDocumentsToImport.map(importedDoc => transformToImportable(importedDoc, config)));
+        let documentObjectsToImport = yield Promise.all(Object.keys(config.docs).map(doc => getObjectToImportAsync(doc, config.docs[doc])));
         console.log(`Combining ${documentObjectsToImport.length} doc(s) with template at ${config.output.template} ...`);
-        let templateJson = (yield importer_1.default(config.output.template)), combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
+        let templateJson = (yield importJson(config.output.template));
+        let combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
         let completeSwaggerDoc = deep_extend_1.default(templateJson, combinedObjectToImport);
         console.log(`Writing generated doc at ${config.output.destination} ...`);
         writeJsonToFile(completeSwaggerDoc, config.output.destination);
@@ -206,5 +259,5 @@ function createDocAsync(config) {
         return config.output.destination;
     });
 }
-exports.createDocAsync = createDocAsync;
+exports.generateDocAsync = generateDocAsync;
 //# sourceMappingURL=index.js.map

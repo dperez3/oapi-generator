@@ -2,15 +2,44 @@
 
 import fs from "fs";
 import path from "path";
-import importJson from "./importer";
+import {
+  getOApiDocument,
+  saveOApiDocument,
+  isValidOApiDocument
+} from "./oApiDocumentService";
 import converter from "swagger2openapi";
 import { OpenAPIV3, OpenAPIV2 } from "openapi-types";
 import deepExtend from "deep-extend";
 import pointer from "json-pointer";
 import { Configuration } from "./configuration";
+import UI from "console-ui";
 
 const V2_REGEX = /2.*/;
 const V3_REGEX = /3.*/;
+
+const FailIfInvalidImports = false;
+
+const ui = new UI({
+  inputStream: process.stdin,
+  outputStream: process.stdout,
+  errorStream: process.stderr,
+  writeLevel: "WARNING" //'DEBUG' | 'INFO' | 'WARNING' | 'ERROR',
+});
+
+interface IImport {
+  paths: OpenAPIV3.PathObject;
+  components: OpenAPIV3.ComponentsObject;
+}
+
+interface IReferencedComponent {
+  path: string;
+  obj: object;
+}
+
+interface SourceOApiDocument {
+  sourcePath: string;
+  oApiDocument: OpenAPIV2.Document | OpenAPIV3.Document;
+}
 
 async function asOpenAPIV3Async(
   doc: OpenAPIV2.Document | OpenAPIV3.Document
@@ -217,8 +246,8 @@ function updateComponentPaths(
   });
 }
 
-async function getObjectToImportAsync(
-  docUrl: string,
+async function transformToImportable(
+  sourceOApiDocument: OpenAPIV2.Document | OpenAPIV3.Document,
   docConfiguration: Configuration.IDocConfig
 ): Promise<IImport> {
   console.log(`Fetching json for ${docUrl} ...`);
@@ -256,11 +285,79 @@ async function getObjectToImportAsync(
   return importedDoc;
 }
 
-export async function createDocAsync(
+async function getSourceOApiDocuments(
+  paths: string[]
+): Promise<Array<SourceOApiDocument>> {
+  return await Promise.all(
+    paths.map(async path => {
+      return {
+        sourcePath: path,
+        oApiDocument: await getOApiDocument(path)
+      };
+    })
+  );
+}
+
+async function validateOApiDocuments(
+  oApiSourceDocuments: Array<SourceOApiDocument>
+): Promise<void> {
+  let validatedDocuments = await Promise.all(
+    oApiSourceDocuments.map(async x => {
+      return {
+        ...x,
+        isValid: await isValidOApiDocument(x.oApiDocument)
+      };
+    })
+  );
+
+  let invalidDocuments = validatedDocuments.filter(x => x.isValid === false);
+  if (invalidDocuments.length > 0) {
+    let invalidSources = invalidDocuments
+      .map(x => `"${x.sourcePath}"`)
+      .join(", ");
+    let message = `Imported documents did not have valid schemas => ${invalidSources}`;
+
+    ui.writeWarnLine(message);
+    if (FailIfInvalidImports) {
+      throw new Error(message);
+    }
+  }
+}
+
+export async function generateDocAsync(
   config: Configuration.IGenOpenAPIV3Config
 ): Promise<string> {
+  // Step 1: Import all dependent documents. Fail immediately if one is not found.
+  let oapiDocumentsToImport = await getSourceOApiDocuments(
+    Object.keys(config.docs)
+  );
+
+  // Step 2: Validate imported OpenAPI document schemas. Log or fail when invalid schema is found. (new config value?).
+  await validateOApiDocuments(oapiDocumentsToImport);
+
+  // Step 3: Setup plan. Report plan.
+  //    - V2 to V3 conversions
+
+  // Step 4: Execute plan. Iterate through each document 1 by 1. Report all things...
+  //    - V2 to V3 conversions
+  //    - Types being imported
+  let importationContexts = oapiDocumentsToImport.map(x => {
+    return {
+      config: config.docs[x.sourcePath],
+      oApiDocument: x.oApiDocument
+    };
+  });
+
+  let finalImportables = await Promise.all(
+    oapiDocumentsToImport.map(importedDoc =>
+      transformToImportable(importedDoc, config)
+    )
+  );
+
   let documentObjectsToImport = await Promise.all(
-    Object.keys(config.docs).map(x => getObjectToImportAsync(x, config.docs[x]))
+    Object.keys(config.docs).map(doc =>
+      getObjectToImportAsync(doc, config.docs[doc])
+    )
   );
 
   console.log(
@@ -269,12 +366,12 @@ export async function createDocAsync(
     } ...`
   );
   let templateJson = (await importJson(
-      config.output.template
-    )) as OpenAPIV3.Document,
-    combinedObjectToImport = documentObjectsToImport.reduce(
-      deepExtend,
-      {}
-    ) as IImport;
+    config.output.template
+  )) as OpenAPIV3.Document;
+  let combinedObjectToImport = documentObjectsToImport.reduce(
+    deepExtend,
+    {}
+  ) as IImport;
 
   let completeSwaggerDoc = deepExtend(templateJson, combinedObjectToImport);
 
@@ -289,14 +386,4 @@ export async function createDocAsync(
   );
 
   return config.output.destination;
-}
-
-interface IImport {
-  paths: OpenAPIV3.PathObject;
-  components: OpenAPIV3.ComponentsObject;
-}
-
-interface IReferencedComponent {
-  path: string;
-  obj: object;
 }

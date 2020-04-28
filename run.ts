@@ -2,7 +2,7 @@
 
 import path from "path";
 import yargs from "yargs";
-import { createDocAsync } from "./index";
+import { generateDocAsync } from "./index";
 import { Configuration } from "./configuration";
 
 const argDefs = yargs
@@ -29,7 +29,7 @@ function getConfigurationFromFile(
 async function generateOneDocAsync(
   config: Configuration.IGenOpenAPIV3Config
 ): Promise<void> {
-  createDocAsync(config).catch(err => {
+  generateDocAsync(config).catch(err => {
     console.error(err);
     throw Error(err);
   });
