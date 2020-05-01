@@ -223,4 +223,14 @@ function createDocAsync(config) {
     });
 }
 exports.createDocAsync = createDocAsync;
+// import oasValidator from "oas-validator";
+// Maybe just a list of local and remote source docs in config (instead of template)
+// Pull down all docs
+// ** Validate them
+// Convert any v2 to v3 docs
+// ** onDocImportComplete() to correct faulty source documents
+// ** Validate final modified? source documents
+// generatedocs
+// onPathComplete, onDocComplete
+// ** validate final doc (fail or log)
 //# sourceMappingURL=index.js.map
