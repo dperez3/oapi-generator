@@ -5,8 +5,8 @@
   "bin": "./run.js",
   "main": "index.js",
   "scripts": {
-    "build-ts": "tsc",
-    "watch-ts": "tsc -w",
+    "build": "tsc",
+    "watch": "tsc -w",
     "prettier": "prettier",
     "prettier-check": "prettier --check **/*.ts",
     "prettier-write": "prettier --write **/*.ts",
