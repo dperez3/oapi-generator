@@ -1,7 +1,7 @@
 # oapi-generator
 
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
-[![buddy pipeline](https://app.buddy.works/dperez3iii/oapi-generator/pipelines/pipeline/194390/badge.svg?token=3c7d484bbe0003aba1918844243f2752a904e06cb52dc12bbedee9ceeae78646 "buddy pipeline")](https://app.buddy.works/dperez3iii/oapi-generator/pipelines/pipeline/194390)
+![Node.js CI](https://github.com/dperez3/oapi-generator/workflows/Node.js%20CI/badge.svg)
 
 Generate OpenAPI documents from multiple Swagger v2 or Open API v3 documents.
 
