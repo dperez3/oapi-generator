@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -14,22 +15,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const request_promise_1 = __importDefault(require("request-promise"));
+const oApiDocumentService_1 = require("./oApiDocumentService");
 const swagger2openapi_1 = __importDefault(require("swagger2openapi"));
 const deep_extend_1 = __importDefault(require("deep-extend"));
 const json_pointer_1 = __importDefault(require("json-pointer"));
+const console_ui_1 = __importDefault(require("console-ui"));
 const V2_REGEX = /2.*/;
 const V3_REGEX = /3.*/;
-function getURLJsonAsync(url) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return request_promise_1.default
-            .get(url)
-            .then(JSON.parse);
-    });
-}
-function getJsonByFilePath(filePath) {
-    return JSON.parse(fs_1.default.readFileSync(filePath, { encoding: 'utf8' }));
-}
+const FailIfInvalidImports = false;
+const ui = new console_ui_1.default({
+    inputStream: process.stdin,
+    outputStream: process.stdout,
+    errorStream: process.stderr,
+    writeLevel: "WARNING" //'DEBUG' | 'INFO' | 'WARNING' | 'ERROR',
+});
 function asOpenAPIV3Async(doc) {
     return __awaiter(this, void 0, void 0, function* () {
         let v2Doc = doc, v3Doc = doc, isV2Doc = v2Doc.swagger && V2_REGEX.test(v2Doc.swagger), isV3Doc = v3Doc.openapi && V3_REGEX.test(v3Doc.openapi);
@@ -41,7 +40,7 @@ function asOpenAPIV3Async(doc) {
             return v3Doc;
         }
         else {
-            throw Error('Document not recognized as Swagger 2.x nor OpenAPI 3.x.');
+            throw Error("Document not recognized as Swagger 2.x nor OpenAPI 3.x.");
         }
     });
 }
@@ -103,14 +102,13 @@ function getAllReferencingObjectsInObject(objectToSearch) {
     // deep object search for properties named '$ref'
     let results = [];
     if (objectToSearch instanceof Array) {
-        let referencedComponents = objectToSearch
-            .map(getAllReferencingObjectsInObject);
+        let referencedComponents = objectToSearch.map(getAllReferencingObjectsInObject);
         results = results.concat(...referencedComponents);
     }
     else {
         for (let prop in objectToSearch) {
             let propValue = objectToSearch[prop];
-            if (prop == '$ref') {
+            if (prop == "$ref") {
                 results.push(objectToSearch);
             }
             else if (propValue instanceof Object || propValue instanceof Array) {
@@ -131,8 +129,7 @@ function getAllReferencedComponentsInObject(rootObject, objectToSearch) {
             distinctReferencingObjects.push(obj.$ref);
         }
     }
-    return distinctReferencingObjects
-        .map(x => {
+    return distinctReferencingObjects.map(x => {
         let strictPath = x.substr(1);
         return {
             path: strictPath,
@@ -144,8 +141,7 @@ function getComponentsToImport(doc, paths) {
     let groupsOfReferencedComponents = paths
         .map(x => doc.paths[x])
         .map(x => getAllReferencedComponentsInObject(doc, x));
-    let referencedComponents = []
-        .concat(...groupsOfReferencedComponents);
+    let referencedComponents = [].concat(...groupsOfReferencedComponents);
     // We must go deeper... Recursive search through results (Find components referenced by referenced components)
     let recursiveResults = referencedComponents;
     do {
@@ -159,8 +155,7 @@ function getComponentsToImport(doc, paths) {
         referencedComponents = referencedComponents.concat(...recursiveResults);
     } while (recursiveResults.length > 0);
     let newDoc = {};
-    referencedComponents
-        .forEach(x => {
+    referencedComponents.forEach(x => {
         json_pointer_1.default.set(newDoc, x.path, x.obj);
     });
     return newDoc.components;
@@ -174,8 +169,7 @@ function updateComponentPaths(importableDoc, componentPathPrefix) {
     if (!componentPathPrefix)
         return;
     let allReferencingObjects = getAllReferencingObjectsInObject(importableDoc);
-    allReferencingObjects
-        .forEach(referencingObject => {
+    allReferencingObjects.forEach(referencingObject => {
         let originalPath = referencingObject.$ref, originalPathValid = originalPath.substr(1), newPath = createNewPath(referencingObject.$ref, componentPathPrefix), newPathValid = newPath.substr(1);
         console.log(`Converting component path reference from '${originalPath}' to '${newPath}' ...`);
         // set path to newpath
@@ -188,10 +182,10 @@ function updateComponentPaths(importableDoc, componentPathPrefix) {
         }
     });
 }
-function getObjectToImportAsync(docUrl, docConfiguration) {
+function transformToImportable(sourceOApiDocument, docConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(`Fetching json for ${docUrl} ...`);
-        let originalDocJson = yield getURLJsonAsync(docUrl);
+        let originalDocJson = (yield importJson(docUrl));
         console.log(`Checking and/or converting doc at ${docUrl} to OpenAPI V3...`);
         let openapiv3Doc = yield asOpenAPIV3Async(originalDocJson);
         console.log(`Creating paths to import from ${docUrl} ...`);
@@ -207,13 +201,56 @@ function getObjectToImportAsync(docUrl, docConfiguration) {
         return importedDoc;
     });
 }
-function createDocAsync(config) {
+function getSourceOApiDocuments(paths) {
     return __awaiter(this, void 0, void 0, function* () {
-        let documentObjectsToImport = yield Promise.all(Object
-            .keys(config.docs)
-            .map(x => getObjectToImportAsync(x, config.docs[x])));
+        return yield Promise.all(paths.map((path) => __awaiter(this, void 0, void 0, function* () {
+            return {
+                sourcePath: path,
+                oApiDocument: yield oApiDocumentService_1.getOApiDocument(path)
+            };
+        })));
+    });
+}
+function validateOApiDocuments(oApiSourceDocuments) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let validatedDocuments = yield Promise.all(oApiSourceDocuments.map((x) => __awaiter(this, void 0, void 0, function* () {
+            return Object.assign(Object.assign({}, x), { isValid: yield oApiDocumentService_1.isValidOApiDocument(x.oApiDocument) });
+        })));
+        let invalidDocuments = validatedDocuments.filter(x => x.isValid === false);
+        if (invalidDocuments.length > 0) {
+            let invalidSources = invalidDocuments
+                .map(x => `"${x.sourcePath}"`)
+                .join(", ");
+            let message = `Imported documents did not have valid schemas => ${invalidSources}`;
+            ui.writeWarnLine(message);
+            if (FailIfInvalidImports) {
+                throw new Error(message);
+            }
+        }
+    });
+}
+function generateDocAsync(config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Step 1: Import all dependent documents. Fail immediately if one is not found.
+        let oapiDocumentsToImport = yield getSourceOApiDocuments(Object.keys(config.docs));
+        // Step 2: Validate imported OpenAPI document schemas. Log or fail when invalid schema is found. (new config value?).
+        yield validateOApiDocuments(oapiDocumentsToImport);
+        // Step 3: Setup plan. Report plan.
+        //    - V2 to V3 conversions
+        // Step 4: Execute plan. Iterate through each document 1 by 1. Report all things...
+        //    - V2 to V3 conversions
+        //    - Types being imported
+        let importationContexts = oapiDocumentsToImport.map(x => {
+            return {
+                config: config.docs[x.sourcePath],
+                oApiDocument: x.oApiDocument
+            };
+        });
+        let finalImportables = yield Promise.all(oapiDocumentsToImport.map(importedDoc => transformToImportable(importedDoc, config)));
+        let documentObjectsToImport = yield Promise.all(Object.keys(config.docs).map(doc => getObjectToImportAsync(doc, config.docs[doc])));
         console.log(`Combining ${documentObjectsToImport.length} doc(s) with template at ${config.output.template} ...`);
-        let templateJson = getJsonByFilePath(config.output.template), combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
+        let templateJson = (yield importJson(config.output.template));
+        let combinedObjectToImport = documentObjectsToImport.reduce(deep_extend_1.default, {});
         let completeSwaggerDoc = deep_extend_1.default(templateJson, combinedObjectToImport);
         console.log(`Writing generated doc at ${config.output.destination} ...`);
         writeJsonToFile(completeSwaggerDoc, config.output.destination);
@@ -222,7 +259,7 @@ function createDocAsync(config) {
         return config.output.destination;
     });
 }
-exports.createDocAsync = createDocAsync;
+exports.generateDocAsync = generateDocAsync;
 // import oasValidator from "oas-validator";
 // Maybe just a list of local and remote source docs in config (instead of template)
 // Pull down all docs
