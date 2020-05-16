@@ -1,24 +1,23 @@
 {
+  "include": ["src", "types"],
   "compilerOptions": {
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "target": "es6",
-    "noImplicitAny": true,
-    "moduleResolution": "node",
+    "module": "esnext",
+    "lib": ["dom", "esnext"],
+    "importHelpers": true,
+    "declaration": true,
     "sourceMap": true,
-    "baseUrl": ".",
+    "rootDir": "./src",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
     "paths": {
-      "*": [
-        "node_modules/*",
-        "typescript-definitions/*"
-      ]
-    }
-  },
-  "include": [
-    "typescript-definitions/**/*",
-    "**/*"
-  ],
-  "exclude": [
-    "node_modules/*"
-  ]
+      "*": ["src/*", "node_modules/*"]
+    },
+    "jsx": "react",
+    "esModuleInterop": true
+  }
 }
