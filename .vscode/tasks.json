@@ -41,6 +41,14 @@
       },
       "problemMatcher": []
     },
+    ,
+    {
+      "label": "Lint: Fix",
+      "detail": "Fixes fixable errors and warnings",
+      "type": "npm",
+      "script": "fix",
+      "problemMatcher": []
+    },
     {
       "label": "Commit",
       "type": "npm",

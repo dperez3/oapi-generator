@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
-import path from "path";
-import yargs from "yargs";
-import { generateDocAsync } from "./index";
-import { Configuration } from "./configuration";
+import path from 'path';
+import yargs from 'yargs';
+import { generateDocAsync } from './index';
+import { Configuration } from './configuration';
 
 const argDefs = yargs
   .usage(
     `Usage: 'npm run gen-openapi-doc -- --config "./gen-openapi-config/configurations.js"'`
   )
-  .option("config", {
-    alias: "c",
+  .option('config', {
+    alias: 'c',
     demandOption: true,
     describe: `The configuration file to generate the new OpenAPI v3 document(s) with.`,
-    type: "string",
+    type: 'string',
     normalize: true,
-    coerce: path.resolve
+    coerce: path.resolve,
   });
 
 const argv = argDefs.argv;

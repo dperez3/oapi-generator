@@ -1,10 +1,10 @@
-import { URL } from "url";
-import { existsSync, readFileSync } from "fs";
-import request from "request-promise";
-import { OpenAPIV3, OpenAPIV2 } from "openapi-types";
-import oasValidator from "oas-validator";
+import { URL } from 'url';
+import { existsSync, readFileSync } from 'fs';
+import request from 'request-promise';
+import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
+import oasValidator from 'oas-validator';
 
-function tryGetUrl(path: string): URL {
+function tryGetUrl(path: string): URL | null {
   try {
     return new URL(path);
   } catch (err) {
@@ -17,7 +17,7 @@ async function getRemoteJson(url: URL): Promise<any> {
 }
 
 function getLocalJson(path: string): any {
-  return JSON.parse(readFileSync(path, { encoding: "utf8" }));
+  return JSON.parse(readFileSync(path, { encoding: 'utf8' }));
 }
 
 async function getJson(urlOrFilePath: string): Promise<any> {
@@ -40,18 +40,18 @@ export async function getOApiDocument(
 export async function isValidOApiDocument(
   oApiDocument: OpenAPIV2.Document | OpenAPIV3.Document
 ): Promise<boolean> {
-  return await oasValidator.validate(oApiDocument, {});
+  return (await oasValidator.validate(oApiDocument, {})).valid;
 }
 
 export async function convertToV3(
   openApiV2Document: OpenAPIV2.Document
 ): Promise<OpenAPIV3.Document> {
-  throw new Error("Not Implemented");
+  throw new Error(`Not Implemented: ${openApiV2Document}`);
 }
 
 export async function saveOApiDocument(
   document: OpenAPIV3.Document,
   filePath: string
 ): Promise<void> {
-  throw new Error("Not Implemented");
+  throw new Error(`Not Implemented: ${document}, ${filePath}`);
 }

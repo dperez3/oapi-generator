@@ -1,9 +1,9 @@
-export class S2OError {
-  static captureStackTrace(p0: any, p1: any): any;
-  static stackTraceLimit: number;
-  constructor(message: any);
-  name: any;
-}
+// export class S2OError {
+//   static captureStackTrace(p0: any, p1: any): any;
+//   static stackTraceLimit: number;
+//   constructor(message: any);
+//   name: any;
+// }
 export function convert(swagger: any, options: any, callback: any): any;
 export function convertFile(filename: any, options: any, callback: any): any;
 export function convertObj(swagger: any, options: any, callback: any): any;
