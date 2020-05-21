@@ -2,7 +2,17 @@ import { URL } from 'url';
 import { existsSync, readFileSync } from 'fs';
 import request from 'request-promise';
 import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
-import oasValidator from 'oas-validator';
+import validator from 'ibm-openapi-validator';
+
+export interface validatorResultItem {
+  path: string;
+  message: string;
+}
+
+export interface validatorResult {
+  errors: [] | [validatorResultItem];
+  warnings: [] | [validatorResultItem];
+}
 
 function tryGetUrl(path: string): URL | null {
   try {
@@ -37,21 +47,21 @@ export async function getOApiDocument(
   return await getJson(urlOrFilePath);
 }
 
-export async function isValidOApiDocument(
+export async function saveOApiDocument(
+  document: OpenAPIV3.Document,
+  filePath: string
+): Promise<void> {
+  throw new Error(`Not Implemented: ${document}, ${filePath}`);
+}
+
+export async function validateDocument(
   oApiDocument: OpenAPIV2.Document | OpenAPIV3.Document
-): Promise<boolean> {
-  return (await oasValidator.validate(oApiDocument, {})).valid;
+): Promise<validatorResult> {
+  return await validator(oApiDocument, true);
 }
 
 export async function convertToV3(
   openApiV2Document: OpenAPIV2.Document
 ): Promise<OpenAPIV3.Document> {
   throw new Error(`Not Implemented: ${openApiV2Document}`);
-}
-
-export async function saveOApiDocument(
-  document: OpenAPIV3.Document,
-  filePath: string
-): Promise<void> {
-  throw new Error(`Not Implemented: ${document}, ${filePath}`);
 }

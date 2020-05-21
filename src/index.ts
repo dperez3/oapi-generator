@@ -5,8 +5,8 @@ import path from 'path';
 import {
   getOApiDocument,
   //saveOApiDocument,
-  isValidOApiDocument,
-} from './oApiDocumentService';
+  validateDocument,
+} from './oApiDocService';
 import converter from 'swagger2openapi';
 import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
 import deepExtend from 'deep-extend';
@@ -287,12 +287,12 @@ async function validateOApiDocuments(
     oApiSourceDocuments.map(async x => {
       return {
         ...x,
-        isValid: await isValidOApiDocument(x.oApiDocument),
+        isValid: (await validateDocument(x.oApiDocument)).errors.length <= 0,
       };
     })
   );
 
-  let invalidDocuments = validatedDocuments.filter(x => x.isValid === false);
+  let invalidDocuments = validatedDocuments.filter(x => x.isValid);
   if (invalidDocuments.length > 0) {
     let invalidSources = invalidDocuments
       .map(x => `"${x.sourcePath}"`)

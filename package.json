@@ -16,6 +16,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
+    "test-w": "tsdx test --watch",
     "lint": "tsdx lint",
     "fix": "tsdx lint --fix",
     "prepare": "tsdx build",
@@ -48,6 +49,7 @@
     "@commitlint/config-conventional": "^7.3.1",
     "@types/console-ui": "^2.2.3",
     "@types/deep-extend": "^0.4.31",
+    "@types/ibm-openapi-validator": "^0.15.0",
     "@types/json-pointer": "^1.0.30",
     "@types/node": "^10.12.21",
     "@types/request-promise": "^4.1.42",
@@ -63,6 +65,7 @@
   "dependencies": {
     "console-ui": "^3.1.1",
     "deep-extend": "^0.6.0",
+    "ibm-openapi-validator": "^0.27.1",
     "json-pointer": "^0.6.0",
     "openapi-types": "1.3.4",
     "request": "2.88.0",
