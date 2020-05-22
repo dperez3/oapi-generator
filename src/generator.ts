@@ -6,11 +6,9 @@ import {
   convertToV3,
   identifyVersion,
   saveOApiDocument,
-  validatorResult,
-  OpenAPIDocument,
-  OpenAPIVersion,
   validateDocument,
-} from './oApiDocService';
+  Types,
+} from './docUtility';
 import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
 
 export default async function run(
@@ -55,7 +53,7 @@ export default async function run(
 
 async function getSourceDocuments(
   config: Configuration.IGenOpenAPIV3Config
-): Promise<{ path: string; doc: OpenAPIDocument }[]> {
+): Promise<Types.DocumentInfo<Types.OpenAPIDocument>[]> {
   // Phase 1: Pull down all source docs
   // Fail immediately, if something doesn't work
   ui.startProgress(`Getting source documents for '${config.destination}'...`);
@@ -67,7 +65,7 @@ async function getSourceDocuments(
 
 async function validateSourceDocuments(
   config: Configuration.IGenOpenAPIV3Config,
-  docResults: { path: string; doc: OpenAPIDocument }[]
+  docResults: Types.DocumentInfo<Types.OpenAPIDocument>[]
 ): Promise<void> {
   // Phase 2: validate all source docs
   // Fail immediately, if something is invalid
@@ -77,7 +75,7 @@ async function validateSourceDocuments(
   const validationResults = await validateDocuments(
     ...docResults.map(x => {
       return {
-        key: x.path,
+        src: x.src,
         doc: x.doc,
       };
     })
@@ -89,13 +87,13 @@ async function validateSourceDocuments(
 
 async function convertToV3Documents(
   config: Configuration.IGenOpenAPIV3Config,
-  sourceDocuments: { path: string; doc: OpenAPIDocument }[]
-): Promise<{ path: string; doc: OpenAPIV3.Document }[]> {
+  sourceDocuments: Types.DocumentInfo<Types.OpenAPIDocument>[]
+): Promise<Types.DocumentInfo<Types.OpenAPIV3Document>[]> {
   // Phase 3: Convert V2 docs to V3
   // Fail immediately, if not successful
   // TODO: This is bad, clean it up.
   const v2Documents = sourceDocuments.filter(
-    x => identifyVersion(x.doc) === OpenAPIVersion.V2
+    x => identifyVersion(x.doc) === Types.OpenAPIVersion.V2
   );
   if (v2Documents.length > 0) {
     ui.startProgress(
@@ -103,9 +101,9 @@ async function convertToV3Documents(
     );
     const convertedDocuments = await Promise.all(
       v2Documents.map(async v2Doc => {
-        ui.writeInfoLine(`Converting '${v2Doc.path}'...`);
+        ui.writeInfoLine(`Converting '${v2Doc.src}'...`);
         return {
-          path: v2Doc.path,
+          path: v2Doc.src,
           doc: await convertToV3(v2Doc.doc as OpenAPIV2.Document),
         };
       })
@@ -114,7 +112,7 @@ async function convertToV3Documents(
     // reassign doc property of v2 objects to matching v3 doc
     convertedDocuments.forEach(v3Doc => {
       const oldV2Doc = sourceDocuments.find(
-        srcDoc => srcDoc.path === v3Doc.path
+        srcDoc => srcDoc.src === v3Doc.path
       ) as any;
       oldV2Doc.doc = v3Doc;
     });
@@ -124,17 +122,19 @@ async function convertToV3Documents(
 
   // Sanity check
   if (
-    !sourceDocuments.every(x => identifyVersion(x.doc) == OpenAPIVersion.V3)
+    !sourceDocuments.every(
+      x => identifyVersion(x.doc) === Types.OpenAPIVersion.V3
+    )
   ) {
     throw new Error('Could not convert all documents to V3.');
   }
 
-  return sourceDocuments as { path: string; doc: OpenAPIV3.Document }[];
+  return sourceDocuments as Types.DocumentInfo<Types.OpenAPIV3Document>[];
 }
 
 async function generateDoc(
   config: Configuration.IGenOpenAPIV3Config,
-  sourceDocs: { path: string; doc: OpenAPIV3.Document }[]
+  sourceDocs: Types.DocumentInfo<Types.OpenAPIV3Document>[]
 ): Promise<OpenAPIV3.Document> {
   // Phase 4: Combine docs
   throw new Error('Not Implemented');
@@ -166,7 +166,7 @@ async function validateGeneratedDoc(
   );
   const validationResult = await validateDocument(generatedDoc);
   await reportValidationResults({
-    key: config.destination,
+    docSrc: config.destination,
     result: validationResult,
   });
   ui.stopProgress();
@@ -183,16 +183,16 @@ async function saveGeneratedDoc(
 ///////////////////////////////
 
 async function reportValidationResults(
-  ...validationResults: { key: string; result: validatorResult }[]
+  ...validationResults: Types.ValidationResult[]
 ) {
   validationResults.forEach(res => {
     if (res.result.errors.length > 0) {
-      ui.writeError(`Found error(s) for '${res.key}'...` as Object);
+      ui.writeError(`Found error(s) for '${res.docSrc}'...` as Object);
       res.result.errors.forEach(err => {
         ui.writeError(err);
       });
     } else if (res.result.warnings.length > 0) {
-      ui.writeWarnLine(`Found warnings(s) for '${res.key}'...`);
+      ui.writeWarnLine(`Found warnings(s) for '${res.docSrc}'...`);
       res.result.warnings.forEach(warning => {
         ui.writeWarnLine(`'${warning.message}' at '${warning.path}'.`);
       });
@@ -201,7 +201,7 @@ async function reportValidationResults(
 }
 
 async function throwIfValidationErrors(
-  ...validationResults: validatorResult[]
+  ...validationResults: Types.ValidatorResult[]
 ) {
   const validationErrs = validationResults.flatMap(x => x.errors);
   if (validationErrs.length > 0) {

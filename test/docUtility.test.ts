@@ -6,8 +6,8 @@ import {
   validateDocuments,
   convertToV3,
   identifyVersion,
-  OpenAPIVersion,
-} from '../src/oApiDocService';
+  Types,
+} from '../src/docUtility';
 import validator from 'ibm-openapi-validator';
 
 const dataPath = 'test/data';
@@ -49,23 +49,23 @@ describe('oApiDocumentService', () => {
   it('can validate multiple documents', async () => {
     let results = await validateDocuments(
       {
-        key: localV2DocPath,
+        src: localV2DocPath,
         doc: localV2Doc,
       },
       {
-        key: localV3DocPath,
+        src: localV3DocPath,
         doc: localV3Doc,
       }
     );
     expect(results.length).toBe(2);
-    expect(results.map(x => x.key)).toContain(localV2DocPath);
+    expect(results.map(x => x.docSrc)).toContain(localV2DocPath);
     expect(results[0].result.errors.length).toBe(0);
     expect(results[1].result.errors.length).toBe(0);
   });
 
   it('can identify document version', () => {
-    expect(identifyVersion(localV2Doc)).toBe(OpenAPIVersion.V2);
-    expect(identifyVersion(localV3Doc)).toBe(OpenAPIVersion.V3);
+    expect(identifyVersion(localV2Doc)).toBe(Types.OpenAPIVersion.V2);
+    expect(identifyVersion(localV3Doc)).toBe(Types.OpenAPIVersion.V3);
   });
 
   it('can convert from v2 to v3', async () => {

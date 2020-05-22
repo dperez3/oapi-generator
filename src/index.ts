@@ -6,7 +6,7 @@ import {
   getOApiDocument,
   //saveOApiDocument,
   validateDocument,
-} from './oApiDocService';
+} from './docUtility';
 import converter from 'swagger2openapi';
 import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
 import deepExtend from 'deep-extend';
