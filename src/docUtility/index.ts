@@ -61,7 +61,6 @@ export function identifyVersion(
     return Types.OpenAPIVersion.V2;
   }
 
-  console.log('sadsa', documentInfo.doc);
   throw Error(
     `Could not identify version of document from '${documentInfo.src}'.`
   );

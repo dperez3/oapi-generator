@@ -58,8 +58,18 @@ describe('oApiDocumentService', () => {
   });
 
   it('can identify document version', () => {
-    expect(identifyVersion(localV2Doc)).toBe(Types.OpenAPIVersion.V2);
-    expect(identifyVersion(localV3Doc)).toBe(Types.OpenAPIVersion.V3);
+    expect(
+      identifyVersion({
+        src: '',
+        doc: localV2Doc,
+      })
+    ).toBe(Types.OpenAPIVersion.V2);
+    expect(
+      identifyVersion({
+        src: '',
+        doc: localV3Doc,
+      })
+    ).toBe(Types.OpenAPIVersion.V3);
   });
 
   it('can convert from v2 to v3', async () => {
