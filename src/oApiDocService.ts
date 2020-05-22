@@ -15,7 +15,12 @@ export interface validatorResult {
   warnings: [] | [validatorResultItem];
 }
 
-type OpenAPIDocument = OpenAPIV2.Document | OpenAPIV3.Document;
+export type OpenAPIDocument = OpenAPIV2.Document | OpenAPIV3.Document;
+
+export enum OpenAPIVersion {
+  V2,
+  V3,
+}
 
 function tryGetUrl(path: string): URL | null {
   try {
@@ -74,6 +79,29 @@ export async function validateDocument(
   oApiDocument: OpenAPIDocument
 ): Promise<validatorResult> {
   return await validator(oApiDocument, true);
+}
+
+export async function validateDocuments(
+  ...oApiDocuments: { key: string; doc: OpenAPIDocument }[]
+): Promise<{ key: string; result: validatorResult }[]> {
+  let promises = oApiDocuments.map(async x => {
+    return {
+      key: x.key,
+      result: await validateDocument(x.doc),
+    };
+  });
+
+  return await Promise.all(promises);
+}
+
+export function identifyVersion(document: OpenAPIDocument): OpenAPIVersion {
+  if ((document as OpenAPIV3.Document).openapi !== undefined) {
+    return OpenAPIVersion.V3;
+  } else if ((document as OpenAPIV2.Document).swagger !== undefined) {
+    return OpenAPIVersion.V2;
+  }
+
+  throw Error('Could not identify version of document.');
 }
 
 export async function convertToV3(

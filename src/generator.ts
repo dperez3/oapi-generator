@@ -1,0 +1,210 @@
+import { Configuration } from './configuration';
+import ui from './ui';
+import {
+  getOApiDocuments,
+  validateDocuments,
+  convertToV3,
+  identifyVersion,
+  saveOApiDocument,
+  validatorResult,
+  OpenAPIDocument,
+  OpenAPIVersion,
+  validateDocument,
+} from './oApiDocService';
+import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
+
+export default async function run(
+  configs: Configuration.IGenOpenAPIV3Config[]
+) {
+  // Per document to generate...
+  for (const config of configs) {
+    ui.writeInfoLine(`Starting generation for '${config.destination}'...`);
+    try {
+      // Phase 1: Pull down all source docs
+      // Fail immediately, if something doesn't work
+      const sourceDocuments = await getSourceDocuments(config);
+
+      // Phase 2: validate all source docs
+      // Fail immediately, if something is invalid
+      await validateSourceDocuments(config, sourceDocuments);
+
+      // Phase 3: Convert V2 docs to V3
+      // Fail immediately, if not successful
+      const sourceV3Documents = await convertToV3Documents(
+        config,
+        sourceDocuments
+      );
+
+      // Phase 4: Combine docs
+      const generatedDoc = await generateDoc(config, sourceV3Documents);
+
+      // Phase 5: Run any configured onDocComplete functions
+      await runOnDocComplete(config, generatedDoc);
+
+      // Phase 6: Validate final doc
+      await validateGeneratedDoc(config, generatedDoc);
+
+      // Phase 7: Save generated doc
+      await saveGeneratedDoc(generatedDoc, config);
+    } catch (error) {
+      ui.stopProgress();
+      ui.writeError(error);
+    }
+  }
+}
+
+async function getSourceDocuments(
+  config: Configuration.IGenOpenAPIV3Config
+): Promise<{ path: string; doc: OpenAPIDocument }[]> {
+  // Phase 1: Pull down all source docs
+  // Fail immediately, if something doesn't work
+  ui.startProgress(`Getting source documents for '${config.destination}'...`);
+  const docResults = await getOApiDocuments(...Object.keys(config));
+  ui.stopProgress();
+
+  return docResults;
+}
+
+async function validateSourceDocuments(
+  config: Configuration.IGenOpenAPIV3Config,
+  docResults: { path: string; doc: OpenAPIDocument }[]
+): Promise<void> {
+  // Phase 2: validate all source docs
+  // Fail immediately, if something is invalid
+  ui.startProgress(
+    `Validating source documents for '${config.destination}'...`
+  );
+  const validationResults = await validateDocuments(
+    ...docResults.map(x => {
+      return {
+        key: x.path,
+        doc: x.doc,
+      };
+    })
+  );
+  await reportValidationResults(...validationResults);
+  ui.stopProgress();
+  await throwIfValidationErrors(...validationResults.map(x => x.result));
+}
+
+async function convertToV3Documents(
+  config: Configuration.IGenOpenAPIV3Config,
+  sourceDocuments: { path: string; doc: OpenAPIDocument }[]
+): Promise<{ path: string; doc: OpenAPIV3.Document }[]> {
+  // Phase 3: Convert V2 docs to V3
+  // Fail immediately, if not successful
+  // TODO: This is bad, clean it up.
+  const v2Documents = sourceDocuments.filter(
+    x => identifyVersion(x.doc) === OpenAPIVersion.V2
+  );
+  if (v2Documents.length > 0) {
+    ui.startProgress(
+      `Converting V2 source document(s) to V3 for '${config.destination}'...`
+    );
+    const convertedDocuments = await Promise.all(
+      v2Documents.map(async v2Doc => {
+        ui.writeInfoLine(`Converting '${v2Doc.path}'...`);
+        return {
+          path: v2Doc.path,
+          doc: await convertToV3(v2Doc.doc as OpenAPIV2.Document),
+        };
+      })
+    );
+
+    // reassign doc property of v2 objects to matching v3 doc
+    convertedDocuments.forEach(v3Doc => {
+      const oldV2Doc = sourceDocuments.find(
+        srcDoc => srcDoc.path === v3Doc.path
+      ) as any;
+      oldV2Doc.doc = v3Doc;
+    });
+
+    ui.stopProgress();
+  }
+
+  // Sanity check
+  if (
+    !sourceDocuments.every(x => identifyVersion(x.doc) == OpenAPIVersion.V3)
+  ) {
+    throw new Error('Could not convert all documents to V3.');
+  }
+
+  return sourceDocuments as { path: string; doc: OpenAPIV3.Document }[];
+}
+
+async function generateDoc(
+  config: Configuration.IGenOpenAPIV3Config,
+  sourceDocs: { path: string; doc: OpenAPIV3.Document }[]
+): Promise<OpenAPIV3.Document> {
+  // Phase 4: Combine docs
+  throw new Error('Not Implemented');
+}
+
+async function runOnDocComplete(
+  config: Configuration.IGenOpenAPIV3Config,
+  generatedDoc: OpenAPIV3.Document
+): Promise<void> {
+  // Phase 5: Run any configured onDocComplete functions
+  if (config.onGeneratedDoc !== undefined) {
+    ui.startProgress(
+      `Running onGeneratedDoc hook, ${config.onGeneratedDoc.name}...`
+    );
+    await config.onGeneratedDoc(generatedDoc);
+    ui.stopProgress();
+  } else {
+    ui.writeInfoLine('No onGeneratedDoc hook found.');
+  }
+}
+
+async function validateGeneratedDoc(
+  config: Configuration.IGenOpenAPIV3Config,
+  generatedDoc: OpenAPIV3.Document
+): Promise<void> {
+  // Phase 6: Validate final doc
+  ui.startProgress(
+    `Validating generated document for '${config.destination}'...`
+  );
+  const validationResult = await validateDocument(generatedDoc);
+  await reportValidationResults({
+    key: config.destination,
+    result: validationResult,
+  });
+  ui.stopProgress();
+  await throwIfValidationErrors(validationResult);
+}
+
+async function saveGeneratedDoc(
+  generatedDoc: OpenAPIV3.Document,
+  config: Configuration.IGenOpenAPIV3Config
+): Promise<void> {
+  await saveOApiDocument(generatedDoc, config.destination);
+}
+
+///////////////////////////////
+
+async function reportValidationResults(
+  ...validationResults: { key: string; result: validatorResult }[]
+) {
+  validationResults.forEach(res => {
+    if (res.result.errors.length > 0) {
+      ui.writeError(`Found error(s) for '${res.key}'...` as Object);
+      res.result.errors.forEach(err => {
+        ui.writeError(err);
+      });
+    } else if (res.result.warnings.length > 0) {
+      ui.writeWarnLine(`Found warnings(s) for '${res.key}'...`);
+      res.result.warnings.forEach(warning => {
+        ui.writeWarnLine(`'${warning.message}' at '${warning.path}'.`);
+      });
+    }
+  });
+}
+
+async function throwIfValidationErrors(
+  ...validationResults: validatorResult[]
+) {
+  const validationErrs = validationResults.flatMap(x => x.errors);
+  if (validationErrs.length > 0) {
+    throw validationErrs;
+  }
+}

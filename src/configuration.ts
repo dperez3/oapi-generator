@@ -32,10 +32,13 @@ export namespace Configuration {
      * ```
      */
     docs: IDocsConfig;
+
+    onGeneratedDoc?: (generatedDoc: OpenAPIV3.Document) => Promise<void>;
+
     /**
-     * Specifies what intitial template to start with and where to output the generated document.
+     * Path of the document to be generated.
      */
-    output: IOutputConfig;
+    destination: string;
   }
 
   /**
@@ -100,20 +103,5 @@ export namespace Configuration {
      * Custom modification of the path object before it is imported.
      */
     onPathComplete?: (path: OpenAPIV3.PathItemObject) => void;
-  }
-
-  /**
-   * Specify intitial template to start with and where to output the generated document.
-   */
-  export interface IOutputConfig {
-    /**
-     * Path of static template to start with before external documents are imported.
-     * Use for custom proxies and any other changes that can't be configured.
-     */
-    template: string;
-    /**
-     * Path of the document to be generated.
-     */
-    destination: string;
   }
 }
