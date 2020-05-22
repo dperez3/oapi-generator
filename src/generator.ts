@@ -10,10 +10,14 @@ import {
   Types,
 } from './docUtility';
 import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
+import parseImport, { IImport } from './importParser';
+import deepExtend from 'deep-extend';
 
 export default async function run(
   configs: Configuration.IGenOpenAPIV3Config[]
 ) {
+  const errors = [];
+
   // Per document to generate...
   for (const config of configs) {
     ui.writeInfoLine(`Starting generation for '${config.destination}'...`);
@@ -47,7 +51,12 @@ export default async function run(
     } catch (error) {
       ui.stopProgress();
       ui.writeError(error);
+      errors.push(error);
     }
+  }
+
+  if (errors.length > 0) {
+    throw errors[0];
   }
 }
 
@@ -57,7 +66,7 @@ async function getSourceDocuments(
   // Phase 1: Pull down all source docs
   // Fail immediately, if something doesn't work
   ui.startProgress(`Getting source documents for '${config.destination}'...`);
-  const docResults = await getOApiDocuments(...Object.keys(config));
+  const docResults = await getOApiDocuments(...Object.keys(config.docs));
   ui.stopProgress();
 
   return docResults;
@@ -93,7 +102,7 @@ async function convertToV3Documents(
   // Fail immediately, if not successful
   // TODO: This is bad, clean it up.
   const v2Documents = sourceDocuments.filter(
-    x => identifyVersion(x.doc) === Types.OpenAPIVersion.V2
+    x => identifyVersion(x) === Types.OpenAPIVersion.V2
   );
   if (v2Documents.length > 0) {
     ui.startProgress(
@@ -113,8 +122,8 @@ async function convertToV3Documents(
     convertedDocuments.forEach(v3Doc => {
       const oldV2Doc = sourceDocuments.find(
         srcDoc => srcDoc.src === v3Doc.path
-      ) as any;
-      oldV2Doc.doc = v3Doc;
+      ) as Types.DocumentInfo<Types.OpenAPIV2Document>;
+      oldV2Doc.doc = v3Doc.doc as any;
     });
 
     ui.stopProgress();
@@ -122,9 +131,7 @@ async function convertToV3Documents(
 
   // Sanity check
   if (
-    !sourceDocuments.every(
-      x => identifyVersion(x.doc) === Types.OpenAPIVersion.V3
-    )
+    !sourceDocuments.every(x => identifyVersion(x) === Types.OpenAPIVersion.V3)
   ) {
     throw new Error('Could not convert all documents to V3.');
   }
@@ -137,7 +144,15 @@ async function generateDoc(
   sourceDocs: Types.DocumentInfo<Types.OpenAPIV3Document>[]
 ): Promise<OpenAPIV3.Document> {
   // Phase 4: Combine docs
-  throw new Error('Not Implemented');
+  const importables = await Promise.all(
+    sourceDocs.map(async doc => {
+      return await parseImport(doc.doc, config.docs[doc.src]);
+    })
+  );
+
+  let combinedObjectToImport = importables.reduce(deepExtend, {}) as IImport;
+
+  return combinedObjectToImport as OpenAPIV3.Document;
 }
 
 async function runOnDocComplete(
@@ -177,7 +192,9 @@ async function saveGeneratedDoc(
   generatedDoc: OpenAPIV3.Document,
   config: Configuration.IGenOpenAPIV3Config
 ): Promise<void> {
+  ui.startProgress(`Saving generated document to '${config.destination}'...`);
   await saveOApiDocument(generatedDoc, config.destination);
+  ui.stopProgress();
 }
 
 ///////////////////////////////

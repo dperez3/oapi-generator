@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import {
   getOApiDocument,
   getOApiDocuments,
@@ -8,19 +7,14 @@ import {
   identifyVersion,
   Types,
 } from '../src/docUtility';
+import {
+  localV2DocPath,
+  remoteV2DocPath,
+  localV2Doc,
+  localV3Doc,
+  localV3DocPath,
+} from './test-utility';
 import validator from 'ibm-openapi-validator';
-
-const dataPath = 'test/data';
-const localV2DocPath = `${dataPath}/v2-api-with-examples.json`;
-const localV2Doc = JSON.parse(
-  readFileSync(localV2DocPath, { encoding: 'utf8' })
-);
-const localV3DocPath = `${dataPath}/v3-api-with-examples.json`;
-const localV3Doc = JSON.parse(
-  readFileSync(localV3DocPath, { encoding: 'utf8' })
-);
-const remoteV2DocPath =
-  'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v2.0/json/api-with-examples.json';
 
 describe('oApiDocumentService', () => {
   it('can get local document', async () => {

@@ -1,7 +1,7 @@
 import validator from 'ibm-openapi-validator';
 import swagger2openapi from 'swagger2openapi';
 import * as Types from './types';
-import { getJson } from './io';
+import { getJson, writeJsonToFile } from './io';
 
 export { Types };
 
@@ -28,7 +28,7 @@ export async function saveOApiDocument(
   document: Types.OpenAPIV3Document,
   filePath: string
 ): Promise<void> {
-  throw new Error(`Not Implemented: ${document}, ${filePath}`);
+  writeJsonToFile(document, filePath);
 }
 
 export async function validateDocument(
@@ -51,15 +51,20 @@ export async function validateDocuments(
 }
 
 export function identifyVersion(
-  document: Types.OpenAPIDocument
+  documentInfo: Types.DocumentInfo<Types.OpenAPIDocument>
 ): Types.OpenAPIVersion {
-  if ((document as Types.OpenAPIV3Document).openapi !== undefined) {
+  if ((documentInfo.doc as Types.OpenAPIV3Document).openapi !== undefined) {
     return Types.OpenAPIVersion.V3;
-  } else if ((document as Types.OpenAPIV2Document).swagger !== undefined) {
+  } else if (
+    (documentInfo.doc as Types.OpenAPIV2Document).swagger !== undefined
+  ) {
     return Types.OpenAPIVersion.V2;
   }
 
-  throw Error('Could not identify version of document.');
+  console.log('sadsa', documentInfo.doc);
+  throw Error(
+    `Could not identify version of document from '${documentInfo.src}'.`
+  );
 }
 
 export async function convertToV3(
