@@ -1,4 +1,4 @@
-import { readFileSync, rmdirSync, existsSync } from 'fs';
+import { readFileSync, existsSync, removeSync } from 'fs-extra';
 import { OpenAPIV2Document, OpenAPIV3Document } from '../src/docUtility/types';
 
 export const testBinPath = 'test/bin';
@@ -22,6 +22,34 @@ export function readFile(src: string): any {
 
 export function clearTestBin() {
   if (existsSync(testBinPath)) {
-    rmdirSync(testBinPath);
+    removeSync(testBinPath);
   }
 }
+
+export const mockUI: MockUI = {
+  write: jest.fn(),
+  writeLine: jest.fn(),
+  writeInfoLine: jest.fn(),
+  writeWarnLine: jest.fn(),
+  writeDebugLine: jest.fn(),
+  writeError: jest.fn(),
+  writeDeprecateLine: jest.fn(),
+  setWriteLevel: jest.fn(),
+  startProgress: jest.fn(),
+  stopProgress: jest.fn(),
+  prompt: jest.fn(),
+};
+
+export type MockUI = {
+  write: jest.Mock;
+  writeLine: jest.Mock;
+  writeInfoLine: jest.Mock;
+  writeWarnLine: jest.Mock;
+  writeDebugLine: jest.Mock;
+  writeError: jest.Mock;
+  writeDeprecateLine: jest.Mock;
+  setWriteLevel: jest.Mock;
+  startProgress: jest.Mock;
+  stopProgress: jest.Mock;
+  prompt: jest.Mock;
+};

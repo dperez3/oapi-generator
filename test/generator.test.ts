@@ -7,6 +7,13 @@ import {
 } from './test-utility';
 import { OpenAPIV3Document } from '../src/docUtility/types';
 
+jest.mock('../src/ui', () => {
+  return {
+    __esModule: true,
+    default: require('./test-utility').mockUI,
+  };
+});
+
 beforeEach(() => {
   clearTestBin();
 });
@@ -16,7 +23,9 @@ describe('generator', () => {
     await run([
       {
         docs: {
-          [localV2DocPath]: {},
+          [localV2DocPath]: {
+            componentPathPrefix: 'TestPathPrefix',
+          },
         },
         destination: testDocPath,
       },

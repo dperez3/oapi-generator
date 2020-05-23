@@ -1,6 +1,7 @@
 import { OpenAPIV3 } from 'openapi-types';
 import { Configuration } from 'configuration';
 import pointer from 'json-pointer';
+import deepExtend from 'deep-extend';
 
 export default async function parseImport(
   openapiv3Doc: OpenAPIV3.Document,
@@ -8,7 +9,7 @@ export default async function parseImport(
 ): Promise<IImport> {
   const pathsToImport = getPathsToImport(
     openapiv3Doc.paths,
-    docConfiguration.paths
+    docConfiguration.paths || null
   );
 
   const componentsToImport = getComponentsToImport(
@@ -23,7 +24,13 @@ export default async function parseImport(
 
   updateComponentPaths(importedDoc, docConfiguration.componentPathPrefix);
 
-  return importedDoc;
+  const originalCopy = JSON.parse(
+    JSON.stringify(openapiv3Doc)
+  ) as OpenAPIV3.Document; // make copy, so the original isn't altered
+
+  deepExtend(originalCopy, importedDoc);
+
+  return originalCopy;
 }
 
 function getPathsToImport(
