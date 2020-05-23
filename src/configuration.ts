@@ -69,12 +69,12 @@ export namespace Configuration {
      * }
      * ```
      */
-    paths?: IPathsConfig;
+    paths: IPathsConfig | null;
     /**
      * The prefix to append to the names of Components that this path depends on.
      * Use to avoid name collisions between Components sharing the same name across many imported docs.
      */
-    componentPathPrefix?: string;
+    componentPathPrefix: string;
   }
 
   /**

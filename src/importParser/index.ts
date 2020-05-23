@@ -6,17 +6,17 @@ export default async function parseImport(
   openapiv3Doc: OpenAPIV3.Document,
   docConfiguration: Configuration.IDocConfig
 ): Promise<IImport> {
-  let pathsToImport = getPathsToImport(
+  const pathsToImport = getPathsToImport(
     openapiv3Doc.paths,
     docConfiguration.paths
   );
 
-  let componentsToImport = getComponentsToImport(
+  const componentsToImport = getComponentsToImport(
     openapiv3Doc,
-    Object.keys(docConfiguration.paths)
+    Object.keys(pathsToImport)
   );
 
-  let importedDoc: IImport = {
+  const importedDoc: IImport = {
     paths: pathsToImport,
     components: componentsToImport,
   };
@@ -28,7 +28,7 @@ export default async function parseImport(
 
 function getPathsToImport(
   originalDocPaths: OpenAPIV3.PathObject,
-  pathsConfiguration: Configuration.IPathsConfig
+  pathsConfiguration: Configuration.IPathsConfig | null
 ): OpenAPIV3.PathObject {
   let docPaths = JSON.parse(
     JSON.stringify(originalDocPaths)
@@ -203,10 +203,7 @@ function createNewPath(originalPath: string, pathPrefix: string): string {
   return `${firstPartOfNewPath}${pathPrefix}${lastPartOfNewPath}`;
 }
 
-export interface IImport {
-  paths: OpenAPIV3.PathObject;
-  components: OpenAPIV3.ComponentsObject;
-}
+export type IImport = {} | OpenAPIV3.Document;
 
 interface IReferencedComponent {
   path: string;
