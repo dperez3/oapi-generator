@@ -39,6 +39,9 @@ export namespace Configuration {
      * Path of the document to be generated.
      */
     destination: string;
+
+    throwSrcValidation?: boolean | null;
+    throwDestValidation?: boolean | null;
   }
 
   /**

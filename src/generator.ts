@@ -13,7 +13,7 @@ import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
 import parseImport, { IImport } from './importParser';
 import deepExtend from 'deep-extend';
 
-export default async function run(
+export default async function generate(
   configs: Configuration.IGenOpenAPIV3Config[]
 ) {
   const errors = [];
@@ -91,7 +91,9 @@ async function validateSourceDocuments(
   );
   await reportValidationResults(...validationResults);
   ui.stopProgress();
-  await throwIfValidationErrors(...validationResults.map(x => x.result));
+  if (config.throwSrcValidation) {
+    await throwIfValidationErrors(...validationResults.map(x => x.result));
+  }
 }
 
 async function convertToV3Documents(
@@ -185,7 +187,9 @@ async function validateGeneratedDoc(
     result: validationResult,
   });
   ui.stopProgress();
-  await throwIfValidationErrors(validationResult);
+  if (config.throwDestValidation) {
+    await throwIfValidationErrors(validationResult);
+  }
 }
 
 async function saveGeneratedDoc(

@@ -1,9 +1,10 @@
-import run from '../src/generator';
+import './extensions';
+import generate from '../src/generator';
 import {
-  localV2DocPath,
-  readFile,
+  readJson,
   testDocPath,
   clearTestBin,
+  localV2DocPath,
 } from './test-utility';
 import { OpenAPIV3Document } from '../src/docUtility/types';
 
@@ -20,19 +21,21 @@ beforeEach(() => {
 
 describe('generator', () => {
   it('can run basic configuration', async () => {
-    await run([
+    const componentPrefix = 'TestPathPrefix';
+    await generate([
       {
         docs: {
           [localV2DocPath]: {
-            componentPathPrefix: 'TestPathPrefix',
+            componentPathPrefix: componentPrefix,
           },
         },
         destination: testDocPath,
       },
     ]);
 
-    let doc = readFile(testDocPath) as OpenAPIV3Document;
+    let doc = readJson(testDocPath) as OpenAPIV3Document;
 
     expect(doc).not.toBeNull();
+    expect(doc).toHaveComponents(componentPrefix);
   });
 });
