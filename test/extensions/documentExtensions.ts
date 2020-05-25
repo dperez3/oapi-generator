@@ -49,11 +49,9 @@ expect.extend({
   },
   toHaveComponents(
     { components }: OpenAPIV3.Document,
-    expectedComponentPathPrefix: string,
-    originalComponents: string[] | OpenAPIV3.ComponentsObject
+    expectedComponentPathPrefix: string
   ) {
-    throw new Error(`${originalComponents} not implemented.`);
-    console.log('expect', components);
+    console.error(`toHaveComponents not completely implemented.`);
 
     for (const componentCategoryKey in components) {
       const componentCategory = (components as any)[componentCategoryKey];

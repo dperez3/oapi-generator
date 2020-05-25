@@ -4,6 +4,13 @@ import { localV3PetstoreDoc, localV3Doc, localV3UsptoDoc } from './utility';
 import { OpenAPIV3 } from 'openapi-types';
 import './extensions';
 
+jest.mock('../src/ui', () => {
+  return {
+    __esModule: true,
+    default: require('./utility').mockUI,
+  };
+});
+
 describe('importParser', () => {
   it('can return equal copy with prefixed component paths', async () => {
     const config: Configuration.IDocConfig = {
@@ -30,30 +37,28 @@ describe('importParser', () => {
 
 function expectResultToHaveImported(
   result: OpenAPIV3.Document,
-  docToHaveImported: OpenAPIV3.Document,
+  docToHaveBeenImported: OpenAPIV3.Document,
   expectedComponentPathPrefix: string
-  //originalComponents?: OpenAPIV3.ComponentsObject | null
 ) {
-  expect(result).not.toBe(docToHaveImported);
+  expect(result).not.toBe(docToHaveBeenImported);
 
-  expect(result.openapi).toEqual(docToHaveImported.openapi);
-  expect(result.info).toEqual(docToHaveImported.info);
-  expect(result.servers).toEqual(docToHaveImported.servers);
-  expect(result.security).toEqual(docToHaveImported.security);
-  expect(result.tags).toEqual(docToHaveImported.tags);
-  expect(result.externalDocs).toEqual(docToHaveImported.externalDocs);
+  expect(result.openapi).toEqual(docToHaveBeenImported.openapi);
+  expect(result.info).toEqual(docToHaveBeenImported.info);
+  expect(result.servers).toEqual(docToHaveBeenImported.servers);
+  expect(result.security).toEqual(docToHaveBeenImported.security);
+  expect(result.tags).toEqual(docToHaveBeenImported.tags);
+  expect(result.externalDocs).toEqual(docToHaveBeenImported.externalDocs);
 
   const componentSections = Object.values(result.components as object);
   let componentNames =
     componentSections.length > 0
       ? componentSections.map(x => Object.keys(x)).reduce(x => x)
       : [];
-  console.log('componentNames', componentNames);
 
-  expect(result.paths).not.toEqual(docToHaveImported.openapi);
+  expect(result.paths).not.toEqual(docToHaveBeenImported.openapi);
   // TODO: Do more extensive check on path $refs
 
-  expect(result.components).not.toEqual(docToHaveImported.components);
+  expect(result.components).not.toEqual(docToHaveBeenImported.components);
   componentNames.forEach(name => {
     expect(name).toStartWith(expectedComponentPathPrefix);
   });

@@ -1,12 +1,16 @@
 import { OpenAPIV3 } from 'openapi-types';
 import { Configuration } from 'configuration';
 import pointer from 'json-pointer';
-import deepExtend from 'deep-extend';
+import ui from '../ui';
 
 export default async function parseImport(
   openapiv3Doc: OpenAPIV3.Document,
   docConfiguration: Configuration.IDocConfig
-): Promise<IImport> {
+): Promise<OpenAPIV3.Document> {
+  const originalCopy = JSON.parse(
+    JSON.stringify(openapiv3Doc)
+  ) as OpenAPIV3.Document; // make copy, so the original isn't altered
+
   const pathsToImport = getPathsToImport(
     openapiv3Doc.paths,
     docConfiguration.paths || null
@@ -17,18 +21,10 @@ export default async function parseImport(
     Object.keys(pathsToImport)
   );
 
-  const importedDoc: IImport = {
-    paths: pathsToImport,
-    components: componentsToImport,
-  };
+  originalCopy.paths = pathsToImport;
+  originalCopy.components = componentsToImport;
 
-  updateComponentPaths(importedDoc, docConfiguration.componentPathPrefix);
-
-  const originalCopy = JSON.parse(
-    JSON.stringify(openapiv3Doc)
-  ) as OpenAPIV3.Document; // make copy, so the original isn't altered
-
-  deepExtend(originalCopy, importedDoc);
+  updateComponentPaths(originalCopy, docConfiguration.componentPathPrefix);
 
   return originalCopy;
 }
@@ -119,19 +115,24 @@ function getComponentsToImport(
 }
 
 function updateComponentPaths(
-  importableDoc: IImport,
+  doc: OpenAPIV3.Document,
   componentPathPrefix: string
 ) {
   if (!componentPathPrefix) return;
 
-  let allReferencingObjects = getAllReferencingObjectsInObject(importableDoc);
+  const focusedObject = {
+    paths: doc.paths,
+    components: doc.components,
+  };
+
+  let allReferencingObjects = getAllReferencingObjectsInObject(focusedObject);
   allReferencingObjects.forEach(referencingObject => {
     let originalPath = referencingObject.$ref,
       originalPathValid = originalPath.substr(1),
       newPath = createNewPath(referencingObject.$ref, componentPathPrefix),
       newPathValid = newPath.substr(1);
 
-    console.log(
+    ui.writeInfoLine(
       `Converting component path reference from '${originalPath}' to '${newPath}' ...`
     );
 
@@ -139,10 +140,10 @@ function updateComponentPaths(
     referencingObject.$ref = newPath;
 
     // reassign component to diff path (component may have been reassigned already because multiple objects reference it)
-    if (pointer.has(importableDoc, originalPathValid)) {
-      let referencedObject = pointer.get(importableDoc, originalPathValid);
-      pointer.remove(importableDoc, originalPathValid);
-      pointer.set(importableDoc, newPathValid, referencedObject);
+    if (pointer.has(focusedObject, originalPathValid)) {
+      let referencedObject = pointer.get(focusedObject, originalPathValid);
+      pointer.remove(focusedObject, originalPathValid);
+      pointer.set(focusedObject, newPathValid, referencedObject);
     }
   });
 }
@@ -209,8 +210,6 @@ function createNewPath(originalPath: string, pathPrefix: string): string {
 
   return `${firstPartOfNewPath}${pathPrefix}${lastPartOfNewPath}`;
 }
-
-export type IImport = {} | OpenAPIV3.Document;
 
 interface IReferencedComponent {
   path: string;

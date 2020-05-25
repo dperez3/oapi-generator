@@ -13,7 +13,7 @@ import {
   localV2Doc,
   localV3Doc,
   localV3DocPath,
-} from './test-utility';
+} from './utility';
 import validator from 'ibm-openapi-validator';
 
 describe('oApiDocumentService', () => {
