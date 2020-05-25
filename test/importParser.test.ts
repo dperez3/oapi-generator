@@ -1,6 +1,6 @@
 import parseImport from '../src/importParser';
 import { Configuration } from '../src/configuration';
-import { localV3PetstoreDoc, localV3Doc, localV3UsptoDoc } from './utility';
+import { dataDocs } from './utility';
 import { OpenAPIV3 } from 'openapi-types';
 import './extensions';
 
@@ -18,18 +18,18 @@ describe('importParser', () => {
     };
 
     expectResultToHaveImported(
-      await parseImport(localV3Doc, config),
-      localV3Doc,
+      await parseImport(dataDocs.localV3Doc, config),
+      dataDocs.localV3Doc,
       config.componentPathPrefix
     );
     expectResultToHaveImported(
-      await parseImport(localV3PetstoreDoc, config),
-      localV3PetstoreDoc,
+      await parseImport(dataDocs.localV3PetstoreDoc, config),
+      dataDocs.localV3PetstoreDoc,
       config.componentPathPrefix
     );
     expectResultToHaveImported(
-      await parseImport(localV3UsptoDoc, config),
-      localV3UsptoDoc,
+      await parseImport(dataDocs.localV3UsptoDoc, config),
+      dataDocs.localV3UsptoDoc,
       config.componentPathPrefix
     );
   });

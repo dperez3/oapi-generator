@@ -1,31 +1,36 @@
 import { readFileSync, existsSync, removeSync } from 'fs-extra';
 import { OpenAPIV2Document, OpenAPIV3Document } from '../src/docUtility/types';
 
-export const dataPath = 'test/data';
-export const localV2DocPath = `${dataPath}/v2-api-with-examples.json`;
-export const localV2PetstorePath = `${dataPath}/v2-petstore-expanded.json`;
-export const localV2UberPath = `${dataPath}/v2-uber.json`;
+const dataPath = 'test/data';
+const testBinPath = 'test/bin';
 
-export const localV2Doc = readJson(localV2DocPath) as OpenAPIV2Document;
-export const localV2PetstoreDoc = readJson(
-  localV2PetstorePath
-) as OpenAPIV2Document;
-export const localV2UberDoc = readJson(localV2UberPath) as OpenAPIV2Document;
+export const dataPaths = {
+  localV2DocPath: `${dataPath}/v2-api-with-examples.json`,
+  localV2PetstorePath: `${dataPath}/v2-petstore-expanded.json`,
+  localV2UberPath: `${dataPath}/v2-uber.json`,
 
-export const localV3DocPath = `${dataPath}/v3-api-with-examples.json`;
-export const localV3PetstorePath = `${dataPath}/v3-petstore-expanded.json`;
-export const localV3UsptoPath = `${dataPath}/v3-uspto.json`;
+  localV3DocPath: `${dataPath}/v3-api-with-examples.json`,
+  localV3PetstorePath: `${dataPath}/v3-petstore-expanded.json`,
+  localV3UsptoPath: `${dataPath}/v3-uspto.json`,
 
-export const localV3Doc = readJson(localV3DocPath) as OpenAPIV3Document;
-export const localV3PetstoreDoc = readJson(
-  localV3PetstorePath
-) as OpenAPIV3Document;
-export const localV3UsptoDoc = readJson(localV3UsptoPath) as OpenAPIV3Document;
+  remoteV2DocPath:
+    'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v2.0/json/api-with-examples.json',
+};
 
-export const remoteV2DocPath =
-  'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v2.0/json/api-with-examples.json';
+export const dataDocs = {
+  localV2Doc: readJson(dataPaths.localV2DocPath) as OpenAPIV2Document,
+  localV2PetstoreDoc: readJson(
+    dataPaths.localV2PetstorePath
+  ) as OpenAPIV2Document,
+  localV2UberDoc: readJson(dataPaths.localV2UberPath) as OpenAPIV2Document,
 
-export const testBinPath = 'test/bin';
+  localV3Doc: readJson(dataPaths.localV3DocPath) as OpenAPIV3Document,
+  localV3PetstoreDoc: readJson(
+    dataPaths.localV3PetstorePath
+  ) as OpenAPIV3Document,
+  localV3UsptoDoc: readJson(dataPaths.localV3UsptoPath) as OpenAPIV3Document,
+};
+
 export const testDocPath = `${testBinPath}/testDoc.json`;
 
 export function readJson(src: string) {

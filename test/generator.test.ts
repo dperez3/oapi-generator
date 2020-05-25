@@ -1,6 +1,6 @@
 import './extensions';
 import generate from '../src/generator';
-import { readJson, testDocPath, clearTestBin, localV2DocPath } from './utility';
+import { readJson, testDocPath, clearTestBin, dataPaths } from './utility';
 import { OpenAPIV3Document } from '../src/docUtility/types';
 
 jest.mock('../src/ui', () => {
@@ -20,7 +20,7 @@ describe('generator', () => {
     await generate([
       {
         docs: {
-          [localV2DocPath]: {
+          [dataPaths.localV2DocPath]: {
             componentPathPrefix: componentPrefix,
           },
         },
