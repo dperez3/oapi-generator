@@ -27,7 +27,7 @@ export default async function generate(
       const sourceDocuments = await getSourceDocuments(config);
 
       // Phase 2: validate all source docs
-      // Fail immediately, if something is invalid
+      // Can fail immediately, if something is invalid
       await validateSourceDocuments(config, sourceDocuments);
 
       // Phase 3: Convert V2 docs to V3
@@ -56,7 +56,7 @@ export default async function generate(
   }
 
   if (errors.length > 0) {
-    throw errors[0];
+    throw errors;
   }
 }
 

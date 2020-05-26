@@ -11,7 +11,8 @@
     "node": ">=10"
   },
   "main": "dist/index.js",
-  "module": "dist/mylib.esm.js",
+  "module": "dist/oapi-generator.esm.js",
+  "bin": "dist/run.js",
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
