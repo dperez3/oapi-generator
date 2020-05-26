@@ -1,4 +1,4 @@
-import validator from 'ibm-openapi-validator';
+import SwaggerParser from '@apidevtools/swagger-parser';
 import swagger2openapi from 'swagger2openapi';
 import * as Types from './types';
 import { getJson, writeJsonToFile } from './io';
@@ -34,7 +34,25 @@ export async function saveOApiDocument(
 export async function validateDocument(
   oApiDocument: Types.OpenAPIDocument
 ): Promise<Types.ValidatorResult> {
-  return await validator(oApiDocument, true);
+  try {
+    await SwaggerParser.validate(oApiDocument, {
+      validate: {
+        schema: true,
+        spec: true,
+      },
+    });
+  } catch (err) {
+    const val = err as Types.ValidationError;
+    return {
+      errors: [{ message: val.message }],
+      warnings: [],
+    };
+  }
+
+  return {
+    errors: [],
+    warnings: [],
+  };
 }
 
 export async function validateDocuments(

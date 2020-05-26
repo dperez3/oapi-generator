@@ -1,4 +1,6 @@
 import { OpenAPIV3 } from 'openapi-types';
+import SwaggerParser from '@apidevtools/swagger-parser';
+import { ValidationError } from '../../src/docUtility/types';
 
 export {};
 
@@ -11,6 +13,7 @@ declare global {
         expectedComponentPathPrefix: string,
         originalComponents: string[] | OpenAPIV3.ComponentsObject
       ): R;
+      toBeValidDocument(): Promise<R>;
     }
   }
 }
@@ -72,5 +75,27 @@ expect.extend({
         `expected all components nor to start with ${expectedComponentPathPrefix}.`,
       pass: true,
     };
+  },
+  async toBeValidDocument(document: OpenAPIV3.Document) {
+    try {
+      await SwaggerParser.validate(document, {
+        validate: {
+          schema: true,
+          spec: true,
+        },
+      });
+
+      return {
+        message: () => `Expected document not to be valid.`,
+        pass: true,
+      };
+    } catch (err) {
+      const val = err as ValidationError;
+
+      return {
+        message: () => val.message,
+        pass: false,
+      };
+    }
   },
 });

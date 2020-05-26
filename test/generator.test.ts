@@ -31,6 +31,6 @@ describe('generator', () => {
     let doc = readJson(testDocPath) as OpenAPIV3Document;
 
     expect(doc).not.toBeNull();
-    //expect(doc).toHaveComponents(componentPrefix);
+    expect(doc).toBeValidDocument();
   });
 });

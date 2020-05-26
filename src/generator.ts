@@ -10,7 +10,7 @@ import {
   Types,
 } from './docUtility';
 import { OpenAPIV3, OpenAPIV2 } from 'openapi-types';
-import parseImport, { IImport } from './importParser';
+import parseImport from './importParser';
 import deepExtend from 'deep-extend';
 
 export default async function generate(
@@ -152,7 +152,7 @@ async function generateDoc(
     })
   );
 
-  let combinedObjectToImport = importables.reduce(deepExtend, {}) as IImport;
+  let combinedObjectToImport = importables.reduce(deepExtend, {});
 
   return combinedObjectToImport as OpenAPIV3.Document;
 }

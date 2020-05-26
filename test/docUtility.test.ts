@@ -8,9 +8,9 @@ import {
   Types,
 } from '../src/docUtility';
 import { dataPaths, dataDocs } from './utility';
-import validator from 'ibm-openapi-validator';
+import './extensions';
 
-describe('oApiDocumentService', () => {
+describe('docUtility', () => {
   it('can get local document', async () => {
     let oapiDocument = await getOApiDocument(dataPaths.localV2DocPath);
     expect(oapiDocument).not.toBeNull();
@@ -27,31 +27,6 @@ describe('oApiDocumentService', () => {
     expect(oapiDocuments.length).toBe(2);
     expect(oapiDocuments[0]).not.toBeNull();
     expect(oapiDocuments[1]).not.toBeNull();
-  });
-
-  it('can validate v2 document', async () => {
-    let result = await validateDocument(dataDocs.localV2Doc);
-    expect(result.errors.length).toBe(0);
-  });
-  it('can validate v3 document', async () => {
-    let result = await validateDocument(dataDocs.localV3Doc);
-    expect(result.errors.length).toBe(0);
-  });
-  it('can validate multiple documents', async () => {
-    let results = await validateDocuments(
-      {
-        src: dataPaths.localV2DocPath,
-        doc: dataDocs.localV2Doc,
-      },
-      {
-        src: dataPaths.localV3DocPath,
-        doc: dataDocs.localV3Doc,
-      }
-    );
-    expect(results.length).toBe(2);
-    expect(results.map(x => x.docSrc)).toContain(dataPaths.localV2DocPath);
-    expect(results[0].result.errors.length).toBe(0);
-    expect(results[1].result.errors.length).toBe(0);
   });
 
   it('can identify document version', () => {
@@ -71,9 +46,44 @@ describe('oApiDocumentService', () => {
 
   it('can convert from v2 to v3', async () => {
     let result = await convertToV3(dataDocs.localV2Doc);
-    let validationResult = await validator(result, true);
 
     expect(result.openapi).toBe('3.0.0');
-    expect(validationResult.errors.length).toBe(0);
+    await expect(result).toBeValidDocument();
+  });
+
+  describe('validation', () => {
+    it('can validate v2 document', async () => {
+      let result = await validateDocument(dataDocs.localV2Doc);
+      expect(result.errors.length).toBe(0);
+    });
+    it('can validate v3 document', async () => {
+      let result = await validateDocument(dataDocs.localV3Doc);
+      expect(result.errors.length).toBe(0);
+    });
+    it('can validate multiple documents', async () => {
+      let results = await validateDocuments(
+        {
+          src: dataPaths.localV2DocPath,
+          doc: dataDocs.localV2Doc,
+        },
+        {
+          src: dataPaths.localV3DocPath,
+          doc: dataDocs.localV3Doc,
+        }
+      );
+      expect(results.length).toBe(2);
+      expect(results.map(x => x.docSrc)).toContain(dataPaths.localV2DocPath);
+      expect(results[0].result.errors.length).toBe(0);
+      expect(results[1].result.errors.length).toBe(0);
+    });
+
+    it('can validate erroneous document', async () => {
+      let result = await validateDocument({
+        info: {
+          description: 'I am not a valid document',
+        },
+      } as any);
+      expect(result.errors.length).toBeGreaterThan(0);
+    });
   });
 });

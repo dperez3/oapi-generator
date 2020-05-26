@@ -20,11 +20,18 @@ export type ValidationResult = {
 };
 
 export type ValidatorResultItem = {
-  path: string;
   message: string;
 };
 
 export type ValidatorResult = {
-  errors: [] | [ValidatorResultItem];
-  warnings: [] | [ValidatorResultItem];
+  errors: ValidatorResultItem[];
+  warnings: ValidatorResultItem[];
+};
+
+export type ValidationError = {
+  stack: string;
+  message: string;
+  toJSON: Function;
+  name: string;
+  toString: () => string;
 };
