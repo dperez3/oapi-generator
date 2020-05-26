@@ -215,7 +215,7 @@ async function reportValidationResults(
     } else if (res.result.warnings.length > 0) {
       ui.writeWarnLine(`Found warnings(s) for '${res.docSrc}'...`);
       res.result.warnings.forEach(warning => {
-        ui.writeWarnLine(`'${warning.message}' at '${warning.path}'.`);
+        ui.writeWarnLine(warning.message);
       });
     }
   });
