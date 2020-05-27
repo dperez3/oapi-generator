@@ -7,6 +7,7 @@ const allJsonFilesInHere = readdirSync(__dirname).filter(x =>
 );
 
 describe('test data', () => {
+  // TODO: Use test.each instead
   allJsonFilesInHere.forEach(jsonFile => {
     it(`${jsonFile} is valid`, () => {
       const doc = readJsonSync(resolve(__dirname, jsonFile));

@@ -1,5 +1,8 @@
 import { readFileSync, existsSync, removeSync } from 'fs-extra';
 import { OpenAPIV2Document, OpenAPIV3Document } from '../src/docUtility/types';
+import { OpenAPIV3 } from 'openapi-types';
+import 'jest';
+import './extensions';
 
 const dataPath = 'test/data';
 const testBinPath = 'test/bin';
@@ -70,3 +73,38 @@ export type MockUI = {
   stopProgress: jest.Mock;
   prompt: jest.Mock;
 };
+
+//////////////////////
+
+export const expectations = {
+  expectResultToHaveImported,
+};
+
+function expectResultToHaveImported(
+  result: OpenAPIV3.Document,
+  docToHaveBeenImported: OpenAPIV3.Document,
+  expectedComponentPathPrefix: string
+) {
+  expect(result).not.toBe(docToHaveBeenImported);
+
+  expect(result.openapi).toEqual(docToHaveBeenImported.openapi);
+  expect(result.info).toEqual(docToHaveBeenImported.info);
+  expect(result.servers).toEqual(docToHaveBeenImported.servers);
+  expect(result.security).toEqual(docToHaveBeenImported.security);
+  expect(result.tags).toEqual(docToHaveBeenImported.tags);
+  expect(result.externalDocs).toEqual(docToHaveBeenImported.externalDocs);
+
+  const componentSections = Object.values(result.components as object);
+  let componentNames =
+    componentSections.length > 0
+      ? componentSections.map(x => Object.keys(x)).reduce(x => x)
+      : [];
+
+  expect(result.paths).not.toEqual(docToHaveBeenImported.openapi);
+  // TODO: Do more extensive check on path $refs
+
+  expect(result.components).not.toEqual(docToHaveBeenImported.components);
+  componentNames.forEach(name => {
+    expect(name).toStartWith(expectedComponentPathPrefix);
+  });
+}

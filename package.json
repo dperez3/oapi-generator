@@ -52,6 +52,7 @@
     "@types/deep-extend": "^0.4.31",
     "@types/fs-extra": "^9.0.1",
     "@types/ibm-openapi-validator": "^0.15.0",
+    "@types/jest": "^25.2.3",
     "@types/json-pointer": "^1.0.30",
     "@types/node": "^10.12.21",
     "@types/request-promise": "^4.1.42",
