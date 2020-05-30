@@ -91,17 +91,27 @@ function expectResultToHaveImported(
   expect(result.security).toEqual(docToHaveBeenImported.security);
   expect(result.tags).toEqual(docToHaveBeenImported.tags);
   expect(result.externalDocs).toEqual(docToHaveBeenImported.externalDocs);
+  // TODO: Do more extensive check on path $refs
+}
+
+function expectResultToHaveImportedPaths(result: OpenAPIV3.Document, expectedPaths: Array<{ path: string, val: OpenAPIV3.PathItemObject }>) {
+  expectedPaths.forEach(path => {
+    expect(result.paths).toHaveProperty(path);
+  });
+}
+
+function expectResultToHaveImportedComponents(
+  result: OpenAPIV3.Document,
+  expectedComponents: Array<OpenAPIV3.PathItemObject>,
+  expectedComponentPathPrefix: string
+) {
 
   const componentSections = Object.values(result.components as object);
-  let componentNames =
+  const componentNames =
     componentSections.length > 0
       ? componentSections.map(x => Object.keys(x)).reduce(x => x)
       : [];
 
-  expect(result.paths).not.toEqual(docToHaveBeenImported.openapi);
-  // TODO: Do more extensive check on path $refs
-
-  //expect(result.components).not.toEqual(docToHaveBeenImported.components);
   componentNames.forEach(name => {
     expect(name).toStartWith(expectedComponentPathPrefix);
   });
