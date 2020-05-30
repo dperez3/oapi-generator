@@ -7,10 +7,6 @@ export default async function parseImport(
   openapiv3Doc: OpenAPIV3.Document,
   docConfiguration: Configuration.IDocConfig
 ): Promise<OpenAPIV3.Document> {
-  const originalCopy = JSON.parse(
-    JSON.stringify(openapiv3Doc)
-  ) as OpenAPIV3.Document; // make copy, so the original isn't altered
-
   const pathsToImport = getPathsToImport(
     openapiv3Doc.paths,
     docConfiguration.paths || null
@@ -21,37 +17,33 @@ export default async function parseImport(
     Object.keys(pathsToImport)
   );
 
-  originalCopy.paths = pathsToImport;
-  originalCopy.components = componentsToImport;
+  openapiv3Doc.paths = pathsToImport;
+  openapiv3Doc.components = componentsToImport;
 
-  updateComponentPaths(originalCopy, docConfiguration.componentPathPrefix);
+  updateComponentPaths(openapiv3Doc, docConfiguration.componentPathPrefix);
 
-  return originalCopy;
+  return openapiv3Doc;
 }
 
 function getPathsToImport(
   originalDocPaths: OpenAPIV3.PathObject,
   pathsConfiguration: Configuration.IPathsConfig | null
 ): OpenAPIV3.PathObject {
-  let docPaths = JSON.parse(
-    JSON.stringify(originalDocPaths)
-  ) as OpenAPIV3.PathObject; // make copy, so the original isn't altered
-
   // If no configuration is present, keep all original paths
   if (pathsConfiguration == null) return originalDocPaths;
   if (Object.keys(pathsConfiguration).length <= 0) return originalDocPaths;
 
-  for (let path in docPaths) {
+  for (let path in originalDocPaths) {
     // Clear paths not found in configuration
     if (!pathsConfiguration.hasOwnProperty(path)) {
-      delete docPaths[path];
+      delete originalDocPaths[path];
       continue;
     }
 
     // Set new tags
     let newTags = pathsConfiguration[path].tags;
     if (newTags) {
-      let docPath = docPaths[path];
+      let docPath = originalDocPaths[path];
 
       if (docPath.get) docPath.get.tags = newTags;
       if (docPath.put) docPath.put.tags = newTags;
@@ -65,18 +57,19 @@ function getPathsToImport(
 
     // Set new path names
     if (pathsConfiguration[path].newName) {
-      docPaths[pathsConfiguration[path].newName] = docPaths[path];
-      delete docPaths[path];
+      originalDocPaths[pathsConfiguration[path].newName] =
+        originalDocPaths[path];
+      delete originalDocPaths[path];
     }
 
     // Run configured path hooks
     let config = pathsConfiguration[path];
-    let docPath = docPaths[config.newName];
+    let docPath = originalDocPaths[config.newName];
 
     if (config.onPathComplete) config.onPathComplete(docPath);
   }
 
-  return docPaths;
+  return originalDocPaths;
 }
 
 function getComponentsToImport(

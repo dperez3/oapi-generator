@@ -14,7 +14,7 @@ import parseImport from './importParser';
 import deepExtend from 'deep-extend';
 
 export default async function generate(
-  configs: Configuration.IGenOpenAPIV3Config[]
+  ...configs: Configuration.IGenOpenAPIV3Config[]
 ) {
   const errors = [];
 

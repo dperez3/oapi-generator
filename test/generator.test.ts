@@ -24,16 +24,14 @@ beforeEach(() => {
 describe('generator', () => {
   it('can run basic configuration', async () => {
     const componentPrefix = 'TestPathPrefix';
-    await generate([
-      {
-        docs: {
-          [dataPaths.localV3DocPath]: {
-            componentPathPrefix: componentPrefix,
-          },
+    await generate({
+      docs: {
+        [dataPaths.localV3DocPath]: {
+          componentPathPrefix: componentPrefix,
         },
-        destination: testDocPath,
       },
-    ]);
+      destination: testDocPath,
+    });
 
     let doc = readJson(testDocPath) as OpenAPIV3Document;
 
