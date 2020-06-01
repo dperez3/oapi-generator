@@ -35,7 +35,9 @@ export async function validateDocument(
   oApiDocument: Types.OpenAPIDocument
 ): Promise<Types.ValidatorResult> {
   try {
-    await SwaggerParser.validate(oApiDocument, {
+    // Use copy because validate will dereference $ref objects and mutate the object
+    const copy = JSON.parse(JSON.stringify(oApiDocument));
+    await SwaggerParser.validate(copy, {
       validate: {
         schema: true,
         spec: true,

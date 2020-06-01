@@ -35,6 +35,9 @@ export const dataDocs = {
 };
 
 export const testDocPath = `${testBinPath}/testDoc.json`;
+export const createTestDocPath = (name: string) => {
+  return `${testBinPath}/${name}.json`;
+};
 
 export function readJson(src: string) {
   return JSON.parse(readFileSync(src, { encoding: 'utf8' }));
@@ -82,8 +85,7 @@ export const expectations = {
 
 function expectResultToHaveImported(
   result: OpenAPIV3.Document,
-  docToHaveBeenImported: OpenAPIV3.Document,
-  expectedComponentPathPrefix: string
+  docToHaveBeenImported: OpenAPIV3.Document
 ) {
   expect(result.openapi).toEqual(docToHaveBeenImported.openapi);
   expect(result.info).toEqual(docToHaveBeenImported.info);
@@ -94,25 +96,25 @@ function expectResultToHaveImported(
   // TODO: Do more extensive check on path $refs
 }
 
-function expectResultToHaveImportedPaths(result: OpenAPIV3.Document, expectedPaths: Array<{ path: string, val: OpenAPIV3.PathItemObject }>) {
-  expectedPaths.forEach(path => {
-    expect(result.paths).toHaveProperty(path);
-  });
-}
+// function expectResultToHaveImportedPaths(result: OpenAPIV3.Document, expectedPaths: Array<{ path: string, val: OpenAPIV3.PathItemObject }>) {
+//   expectedPaths.forEach(path => {
+//     expect(result.paths).toHaveProperty(path);
+//   });
+// }
 
-function expectResultToHaveImportedComponents(
-  result: OpenAPIV3.Document,
-  expectedComponents: Array<OpenAPIV3.PathItemObject>,
-  expectedComponentPathPrefix: string
-) {
+// function expectResultToHaveImportedComponents(
+//   result: OpenAPIV3.Document,
+//   expectedComponents: Array<OpenAPIV3.PathItemObject>,
+//   expectedComponentPathPrefix: string
+// ) {
 
-  const componentSections = Object.values(result.components as object);
-  const componentNames =
-    componentSections.length > 0
-      ? componentSections.map(x => Object.keys(x)).reduce(x => x)
-      : [];
+//   const componentSections = Object.values(result.components as object);
+//   const componentNames =
+//     componentSections.length > 0
+//       ? componentSections.map(x => Object.keys(x)).reduce(x => x)
+//       : [];
 
-  componentNames.forEach(name => {
-    expect(name).toStartWith(expectedComponentPathPrefix);
-  });
-}
+//   componentNames.forEach(name => {
+//     expect(name).toStartWith(expectedComponentPathPrefix);
+//   });
+// }
