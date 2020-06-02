@@ -1,6 +1,3 @@
 {
-    "files.exclude": {
-        "**/*.js": true,
-        "**/*.js.map": true
-    }
+  "jest.pathToJest": "yarn test --"
 }

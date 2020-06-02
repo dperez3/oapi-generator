@@ -1,25 +1,59 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Build",
-            "type": "npm",
-            "script": "build-ts",
-            "problemMatcher": []
-        },
-        {
-            "label": "Watch Build",
-            "type": "npm",
-            "script": "watch-ts",
-            "problemMatcher": []
-        },
-        {
-            "label": "Commit",
-            "type": "npm",
-            "script": "cm",
-            "problemMatcher": []
-        }
-    ]
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start",
+      "detail": "Runs the project in development/watch mode. Your project will be rebuilt upon changes. TSDX has a special logger for your convenience. Error messages are pretty printed and formatted for compatibility VS Code's Problems tab.",
+      "type": "npm",
+      "script": "start",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Build",
+      "detail": "Bundles the package to the dist folder. The package is optimized and bundled with Rollup into multiple formats (CommonJS, UMD, and ES Module).",
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Lint",
+      "detail": "Runs Eslint with Prettier on .ts and .tsx files. If you want to customize eslint you can add an eslint block to your package.json, or you can run yarn lint --write-file and edit the generated .eslintrc.js file.",
+      "type": "npm",
+      "script": "lint",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Test",
+      "detail": "This runs Jest v24.x, forwarding all CLI flags to it. See https://jestjs.io for options.",
+      "type": "npm",
+      "script": "test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    ,
+    {
+      "label": "Lint: Fix",
+      "detail": "Fixes fixable errors and warnings",
+      "type": "npm",
+      "script": "fix",
+      "problemMatcher": []
+    },
+    {
+      "label": "Commit",
+      "type": "npm",
+      "script": "cm",
+      "problemMatcher": []
+    }
+  ]
 }

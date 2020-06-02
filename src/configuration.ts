@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { OpenAPIV3 } from "openapi-types";
+import { OpenAPIV3 } from 'openapi-types';
 
 export namespace Configuration {
   /**
@@ -32,10 +32,16 @@ export namespace Configuration {
      * ```
      */
     docs: IDocsConfig;
+
+    onGeneratedDoc?: (generatedDoc: OpenAPIV3.Document) => Promise<void>;
+
     /**
-     * Specifies what intitial template to start with and where to output the generated document.
+     * Path of the document to be generated.
      */
-    output: IOutputConfig;
+    destination: string;
+
+    throwSrcValidation?: boolean | null;
+    throwDestValidation?: boolean | null;
   }
 
   /**
@@ -66,7 +72,7 @@ export namespace Configuration {
      * }
      * ```
      */
-    paths: IPathsConfig;
+    paths?: IPathsConfig | null;
     /**
      * The prefix to append to the names of Components that this path depends on.
      * Use to avoid name collisions between Components sharing the same name across many imported docs.
@@ -91,29 +97,14 @@ export namespace Configuration {
     /**
      * The new path name this path should be imported with.
      */
-    newName: string;
+    newName?: string | null;
     /**
      * New tags to use.
      */
-    tags: string[];
+    tags?: string[] | null;
     /**
      * Custom modification of the path object before it is imported.
      */
     onPathComplete?: (path: OpenAPIV3.PathItemObject) => void;
-  }
-
-  /**
-   * Specify intitial template to start with and where to output the generated document.
-   */
-  export interface IOutputConfig {
-    /**
-     * Path of static template to start with before external documents are imported.
-     * Use for custom proxies and any other changes that can't be configured.
-     */
-    template: string;
-    /**
-     * Path of the document to be generated.
-     */
-    destination: string;
   }
 }
