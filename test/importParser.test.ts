@@ -18,18 +18,15 @@ describe('importParser', () => {
 
     expectations.expectResultToHaveImported(
       await parseImport(dataDocs.localV3Doc, config),
-      dataDocs.localV3Doc,
-      config.componentPathPrefix
+      dataDocs.localV3Doc
     );
     expectations.expectResultToHaveImported(
       await parseImport(dataDocs.localV3PetstoreDoc, config),
-      dataDocs.localV3PetstoreDoc,
-      config.componentPathPrefix
+      dataDocs.localV3PetstoreDoc
     );
     expectations.expectResultToHaveImported(
       await parseImport(dataDocs.localV3UsptoDoc, config),
-      dataDocs.localV3UsptoDoc,
-      config.componentPathPrefix
+      dataDocs.localV3UsptoDoc
     );
   });
 });
