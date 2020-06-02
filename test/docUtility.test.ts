@@ -33,19 +33,19 @@ describe('docUtility', () => {
     expect(
       identifyVersion({
         src: '',
-        doc: dataDocs.localV2Doc,
+        doc: dataDocs.localV2Doc(),
       })
     ).toBe(Types.OpenAPIVersion.V2);
     expect(
       identifyVersion({
         src: '',
-        doc: dataDocs.localV3Doc,
+        doc: dataDocs.localV3Doc(),
       })
     ).toBe(Types.OpenAPIVersion.V3);
   });
 
   it('can convert from v2 to v3', async () => {
-    let result = await convertToV3(dataDocs.localV2Doc);
+    let result = await convertToV3(dataDocs.localV2Doc());
 
     expect(result.openapi).toBe('3.0.0');
     await expect(result).toBeValidDocument();
@@ -53,22 +53,22 @@ describe('docUtility', () => {
 
   describe('validation', () => {
     it('can validate v2 document', async () => {
-      let result = await validateDocument(dataDocs.localV2Doc);
+      let result = await validateDocument(dataDocs.localV2Doc());
       expect(result.errors.length).toBe(0);
     });
     it('can validate v3 document', async () => {
-      let result = await validateDocument(dataDocs.localV3Doc);
+      let result = await validateDocument(dataDocs.localV3Doc());
       expect(result.errors.length).toBe(0);
     });
     it('can validate multiple documents', async () => {
       let results = await validateDocuments(
         {
           src: dataPaths.localV2DocPath,
-          doc: dataDocs.localV2Doc,
+          doc: dataDocs.localV2Doc(),
         },
         {
           src: dataPaths.localV3DocPath,
-          doc: dataDocs.localV3Doc,
+          doc: dataDocs.localV3Doc(),
         }
       );
       expect(results.length).toBe(2);

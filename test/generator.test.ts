@@ -210,7 +210,6 @@ describe('generator', () => {
           },
         },
       },
-      components: {},
     });
   });
 

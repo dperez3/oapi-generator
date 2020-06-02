@@ -18,7 +18,7 @@ export default async function parseImport(
   );
 
   openapiv3Doc.paths = pathsToImport;
-  openapiv3Doc.components = componentsToImport;
+  if (componentsToImport) openapiv3Doc.components = componentsToImport;
 
   updateComponentPaths(openapiv3Doc, docConfiguration.componentPathPrefix);
 
@@ -29,6 +29,7 @@ function getPathsToImport(
   originalDocPaths: OpenAPIV3.PathObject,
   pathsConfiguration: Configuration.IPathsConfig | null
 ): OpenAPIV3.PathObject {
+  // TODO: Copy originalDocPaths instead of modifying it
   // If no configuration is present, keep all original paths
   if (pathsConfiguration == null) return originalDocPaths;
   if (Object.keys(pathsConfiguration).length <= 0) return originalDocPaths;
@@ -40,33 +41,31 @@ function getPathsToImport(
       continue;
     }
 
+    const { tags, newName, onPathComplete } = pathsConfiguration[path];
     // Set new tags
-    let newTags = pathsConfiguration[path].tags;
-    if (newTags) {
+    if (tags) {
       let docPath = originalDocPaths[path];
 
-      if (docPath.get) docPath.get.tags = newTags;
-      if (docPath.put) docPath.put.tags = newTags;
-      if (docPath.post) docPath.post.tags = newTags;
-      if (docPath.delete) docPath.delete.tags = newTags;
-      if (docPath.options) docPath.options.tags = newTags;
-      if (docPath.head) docPath.head.tags = newTags;
-      if (docPath.patch) docPath.patch.tags = newTags;
-      if (docPath.trace) docPath.trace.tags = newTags;
+      if (docPath.get) docPath.get.tags = tags;
+      if (docPath.put) docPath.put.tags = tags;
+      if (docPath.post) docPath.post.tags = tags;
+      if (docPath.delete) docPath.delete.tags = tags;
+      if (docPath.options) docPath.options.tags = tags;
+      if (docPath.head) docPath.head.tags = tags;
+      if (docPath.patch) docPath.patch.tags = tags;
+      if (docPath.trace) docPath.trace.tags = tags;
     }
 
     // Set new path names
-    if (pathsConfiguration[path].newName) {
-      originalDocPaths[pathsConfiguration[path].newName] =
-        originalDocPaths[path];
+    if (newName) {
+      originalDocPaths[newName] = originalDocPaths[path];
       delete originalDocPaths[path];
     }
 
     // Run configured path hooks
-    let config = pathsConfiguration[path];
-    let docPath = originalDocPaths[config.newName];
+    let docPath = originalDocPaths[newName || path];
 
-    if (config.onPathComplete) config.onPathComplete(docPath);
+    if (onPathComplete) onPathComplete(docPath);
   }
 
   return originalDocPaths;
@@ -75,7 +74,7 @@ function getPathsToImport(
 function getComponentsToImport(
   doc: OpenAPIV3.Document,
   paths: string[]
-): OpenAPIV3.ComponentsObject {
+): OpenAPIV3.ComponentsObject | null {
   let groupsOfReferencedComponents = paths
     .map(x => doc.paths[x])
     .map(x => getAllReferencedComponentsInObject(doc, x));
@@ -104,7 +103,7 @@ function getComponentsToImport(
     pointer.set(newDoc, x.path, x.obj);
   });
 
-  return newDoc.components || {};
+  return newDoc.components || null;
 }
 
 function updateComponentPaths(

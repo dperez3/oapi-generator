@@ -97,11 +97,11 @@ export namespace Configuration {
     /**
      * The new path name this path should be imported with.
      */
-    newName: string;
+    newName?: string | null;
     /**
      * New tags to use.
      */
-    tags: string[];
+    tags?: string[] | null;
     /**
      * Custom modification of the path object before it is imported.
      */

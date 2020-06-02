@@ -1,6 +1,5 @@
 import { readFileSync, existsSync, removeSync } from 'fs-extra';
 import { OpenAPIV2Document, OpenAPIV3Document } from '../src/docUtility/types';
-import { OpenAPIV3 } from 'openapi-types';
 import 'jest';
 import './extensions';
 
@@ -21,17 +20,17 @@ export const dataPaths = {
 };
 
 export const dataDocs = {
-  localV2Doc: readJson(dataPaths.localV2DocPath) as OpenAPIV2Document,
-  localV2PetstoreDoc: readJson(
-    dataPaths.localV2PetstorePath
-  ) as OpenAPIV2Document,
-  localV2UberDoc: readJson(dataPaths.localV2UberPath) as OpenAPIV2Document,
+  localV2Doc: () => readJson(dataPaths.localV2DocPath) as OpenAPIV2Document,
+  localV2PetstoreDoc: () =>
+    readJson(dataPaths.localV2PetstorePath) as OpenAPIV2Document,
+  localV2UberDoc: () =>
+    readJson(dataPaths.localV2UberPath) as OpenAPIV2Document,
 
-  localV3Doc: readJson(dataPaths.localV3DocPath) as OpenAPIV3Document,
-  localV3PetstoreDoc: readJson(
-    dataPaths.localV3PetstorePath
-  ) as OpenAPIV3Document,
-  localV3UsptoDoc: readJson(dataPaths.localV3UsptoPath) as OpenAPIV3Document,
+  localV3Doc: () => readJson(dataPaths.localV3DocPath) as OpenAPIV3Document,
+  localV3PetstoreDoc: () =>
+    readJson(dataPaths.localV3PetstorePath) as OpenAPIV3Document,
+  localV3UsptoDoc: () =>
+    readJson(dataPaths.localV3UsptoPath) as OpenAPIV3Document,
 };
 
 export const testDocPath = `${testBinPath}/testDoc.json`;
@@ -76,45 +75,3 @@ export type MockUI = {
   stopProgress: jest.Mock;
   prompt: jest.Mock;
 };
-
-//////////////////////
-
-export const expectations = {
-  expectResultToHaveImported,
-};
-
-function expectResultToHaveImported(
-  result: OpenAPIV3.Document,
-  docToHaveBeenImported: OpenAPIV3.Document
-) {
-  expect(result.openapi).toEqual(docToHaveBeenImported.openapi);
-  expect(result.info).toEqual(docToHaveBeenImported.info);
-  expect(result.servers).toEqual(docToHaveBeenImported.servers);
-  expect(result.security).toEqual(docToHaveBeenImported.security);
-  expect(result.tags).toEqual(docToHaveBeenImported.tags);
-  expect(result.externalDocs).toEqual(docToHaveBeenImported.externalDocs);
-  // TODO: Do more extensive check on path $refs
-}
-
-// function expectResultToHaveImportedPaths(result: OpenAPIV3.Document, expectedPaths: Array<{ path: string, val: OpenAPIV3.PathItemObject }>) {
-//   expectedPaths.forEach(path => {
-//     expect(result.paths).toHaveProperty(path);
-//   });
-// }
-
-// function expectResultToHaveImportedComponents(
-//   result: OpenAPIV3.Document,
-//   expectedComponents: Array<OpenAPIV3.PathItemObject>,
-//   expectedComponentPathPrefix: string
-// ) {
-
-//   const componentSections = Object.values(result.components as object);
-//   const componentNames =
-//     componentSections.length > 0
-//       ? componentSections.map(x => Object.keys(x)).reduce(x => x)
-//       : [];
-
-//   componentNames.forEach(name => {
-//     expect(name).toStartWith(expectedComponentPathPrefix);
-//   });
-// }
